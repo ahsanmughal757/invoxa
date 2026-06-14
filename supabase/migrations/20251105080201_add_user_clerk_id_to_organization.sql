@@ -1,0 +1,1 @@
+ALTER TABLE public.organizations ADD COLUMN "owner_clerk_id" TEXT;

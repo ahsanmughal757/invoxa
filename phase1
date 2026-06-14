@@ -1,0 +1,6 @@
+/drop
+/add       context\InvoiceContext.tsx
+/add       docs\contexts\plan.md
+/add       hooks\use-invoices.ts
+/add       migrations\20230811120000_create_invoices_table.sql
+/add       migrations\20230811120001_enable_invoices_rls.sql

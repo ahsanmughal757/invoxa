@@ -1,0 +1,8 @@
+ ⚠ Port 3000 is in use by an u   ▲ Next.js 15.5.0
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.100.254:3001
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 6.1s
+[?25h

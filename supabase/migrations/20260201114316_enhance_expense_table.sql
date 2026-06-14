@@ -1,0 +1,3 @@
+ALTER TABLE expenses
+ADD COLUMN IF NOT EXISTS client_id TEXT null,
+ADD COLUMN IF NOT EXISTS invoice_id TEXT null;
