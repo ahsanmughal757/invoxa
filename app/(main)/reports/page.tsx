@@ -5,15 +5,23 @@ import { ReportsAnalytics } from '@/components/reports/reports-analytics';
 import { SubscriptionGuard } from '@/components/subscription/subscription-guard';
 import { FEATURES } from '@/hooks/use-subscription-access';
 import { LoadingState, EmptyState, ErrorState, ReadyState } from '@/components/ui/state-components';
+import { NoOrganizationState } from '@/components/empty-states/no-organization-state';
+import { useOrganization } from '@/hooks/use-organization';
 
 export default function ReportsPage() {
   const { invoiceSummary, clients, isLoading, isEmpty, isError, errorMessage, isReady } = useDashboardData();
+  const { isEmpty: orgIsEmpty } = useOrganization();
 
   // Loading State
   if (isLoading) {
     return (
       <LoadingState message="Loading reports..." size="large" />
     );
+  }
+
+  // No Organization State
+  if (orgIsEmpty) {
+    return <NoOrganizationState />;
   }
 
   // Error State

@@ -56,7 +56,7 @@ export function useDashboardData(): DashboardData {
   const { userId } = useAuth();
   const [data, setData] = useState<DashboardData>(defaultState);
   const { memberOrganizations } = useInvoices();
-  const { selectedOrganization } = useOrganization();
+  const { selectedOrganization, isLoading: orgLoading } = useOrganization();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,6 +78,10 @@ export function useDashboardData(): DashboardData {
       //   errorMessage: null,
       //   isReady: false,
       // }));
+
+      if (orgLoading) {
+        return;
+      }
 
       try {
         // Get user profile to get organization ID
@@ -105,7 +109,7 @@ export function useDashboardData(): DashboardData {
             isEmpty: true,
             isError: false,
             errorMessage: null,
-            isReady: !prev.isEmpty,
+            isReady: false,
             generalMessage:
               "No Organization Selected!. Please select the organization from selector.",
             orgName: "",
@@ -276,7 +280,7 @@ export function useDashboardData(): DashboardData {
     };
 
     fetchData();
-  }, [userId, memberOrganizations]);
+  }, [userId, memberOrganizations, orgLoading, selectedOrganization]);
 
   return data;
 }

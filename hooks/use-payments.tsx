@@ -37,7 +37,7 @@ export const PaymentsProvider = ({
 }) => {
   const { userId } = useAuth();
   const [payments, setPayments] = useState<PaymentRecord[] | []>([]);
-  const { selectedOrganization } = useOrganization();
+  const { selectedOrganization, isEmpty: orgIsEmpty, isLoading: orgIsLoading } = useOrganization();
   const { invoices, setInvoices } = useInvoices();
 
   // Loading state flags
@@ -68,12 +68,17 @@ export const PaymentsProvider = ({
         setIsLoading(false);
         setIsEmpty(true);
         setIsReady(false);
-      } else if (!selectedOrganization) {
-        // Still loading org
+      } else if (!orgIsLoading && (orgIsEmpty || !selectedOrganization)) {
+        // Org loading complete, no org found → show empty state, not infinite loading
+        setIsLoading(false);
+        setIsEmpty(true);
+        setIsReady(false);
+      } else {
+        // Still loading org or invoices
         setIsLoading(true);
       }
     })();
-  }, [selectedOrganization, invoices]);
+  }, [selectedOrganization, invoices, orgIsLoading, orgIsEmpty]);
 
   // Fetch clients from the server when the provider mounts
   async function fetchPayments(invoice_ids: string[]) {

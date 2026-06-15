@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidateTag } from "next/cache";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { Logger } from "../utils/logger";
 import { CACHE_TAGS } from "../cache-tags";
 import {
@@ -19,6 +19,7 @@ import {
   SubscriptionData,
 } from "../services/subscription.service";
 import { getDBUser } from "../queries/user";
+import { createUser } from "../repositories/users.repository.func";
 
 /**
  * Get current user's subscription
@@ -234,8 +235,56 @@ export async function getSubscriptionStatusAction(): Promise<{
       };
     }
 
+    // 1. Quick check: does a subscription exist?
+    let subscription = await getUserSubscription(userId);
+
+    // 2. Reconciliation: If no subscription or only a 3-min trigger trial,
+    //    the webhook may have missed or partially failed. Create the DB
+    //    profile and/or 14-day trial on-demand.
+    if (!subscription || subscription.plan === "3min-trial") {
+      try {
+        const dbUser = await getDBUser(userId, "clerk");
+        if (!dbUser) {
+          Logger.info(
+            "SYNC_USER",
+            `No DB profile for clerk=${userId}, creating on-demand`,
+          );
+          const clerkUser = await currentUser();
+          const primaryEmail =
+            clerkUser?.emailAddresses?.find((e) => e.id === clerkUser.primaryEmailAddressId)
+              ?.emailAddress ||
+            clerkUser?.emailAddresses?.[0]?.emailAddress ||
+            "";
+          const name =
+            [clerkUser?.firstName, clerkUser?.lastName]
+              .filter(Boolean)
+              .join(" ") || "Unknown";
+
+          const created = await createUser({
+            clerk_user_id: userId,
+            name,
+            email: primaryEmail,
+          });
+          if (created) {
+            await createTrialSubscription(created.id, userId, "14day");
+          }
+        } else if (subscription?.plan === "3min-trial") {
+          Logger.info(
+            "SYNC_USER",
+            `User=${userId} has only 3-min trial, upgrading to 14-day`,
+          );
+          await createTrialSubscription(dbUser.id, userId, "14day");
+        }
+      } catch (syncErr) {
+        Logger.error("SYNC_USER", "Reconciliation failed", syncErr);
+      }
+
+      // Re-fetch subscription after reconciliation
+      subscription = await getUserSubscription(userId);
+    }
+
+    // 3. Fetch all status data after potential reconciliation
     const [
-      subscription,
       isTrialActive,
       trialDaysRemaining,
       trialTimeRemainingSeconds,
@@ -244,7 +293,6 @@ export async function getSubscriptionStatusAction(): Promise<{
       isExpired,
       hasUsedTrial,
     ] = await Promise.all([
-      getUserSubscription(userId),
       isTrialActiveService(userId),
       getTrialDaysRemainingService(userId),
       getTrialTimeRemainingService(userId),

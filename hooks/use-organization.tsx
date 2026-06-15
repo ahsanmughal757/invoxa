@@ -107,8 +107,7 @@ export const OrganizationProvider = ({
       setErrorMessage(null);
 
       try {
-        const orgsResult = await getOrganizations();
-        const orgs = orgsResult?.data;
+        const orgs = await getOrganizations();
 
         // If user is owner of any organization, set the first one as selected by default
         if (orgs && orgs.length > 0) {
@@ -150,9 +149,7 @@ export const OrganizationProvider = ({
 
   async function getOrganizations() {
     try {
-      const result = await handleAsyncOperation(() =>
-        getOrganizationsForUserAction(),
-      );
+      const result = await getOrganizationsForUserAction();
 
       if (result.success && result.data) {
         return result.data;

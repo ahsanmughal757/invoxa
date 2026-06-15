@@ -131,18 +131,25 @@ export async function POST(request: Request) {
         );
 
         // Create trial subscription for new user
-        try {
-          const { createTrialSubscription } =
-            await import("@/lib/services/subscription.service");
-          await createTrialSubscription(userData.id, data.id, "14day");
-          Logger.info("CLERK_WEBHOOK", `Trial created for user=${data.id}`);
-        } catch (err) {
+        const { createTrialSubscription } =
+          await import("@/lib/services/subscription.service");
+        const trialSub = await createTrialSubscription(
+          userData.id,
+          data.id,
+          "14day",
+        );
+        if (!trialSub) {
           Logger.error(
             "CLERK_WEBHOOK",
             "Failed to create trial subscription",
-            err,
+            null,
+          );
+          return NextResponse.json(
+            { message: "Failed to create trial subscription" },
+            { status: 500 },
           );
         }
+        Logger.info("CLERK_WEBHOOK", `Trial created for user=${data.id}`);
 
         return NextResponse.json(
           { message: `User created: ${data.id}` },

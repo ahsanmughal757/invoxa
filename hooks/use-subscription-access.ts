@@ -100,6 +100,12 @@ export function useSubscriptionAccess({
       return
     }
 
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+    timeoutId = setTimeout(() => {
+      setIsLoading(false)
+    }, 15000)
+
     async function fetchSubscription() {
       try {
         const result = await getSubscriptionStatusAction()
@@ -137,11 +143,16 @@ export function useSubscriptionAccess({
       } catch (error) {
         console.error('Error fetching subscription:', error)
       } finally {
+        clearTimeout(timeoutId)
         setIsLoading(false)
       }
     }
 
     fetchSubscription()
+
+    return () => {
+      clearTimeout(timeoutId)
+    }
   }, [fetchFromServer])
 
   // Use server subscription if fetching from server, otherwise use prop

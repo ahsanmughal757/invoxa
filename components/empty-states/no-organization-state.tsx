@@ -14,8 +14,12 @@ export function NoOrganizationState() {
   const router = useRouter();
   const [isSwitching, setIsSwitching] = useState(false);
 
-  const handleCreateOrganization = async () => {
-    router.push('/organization/create');
+  const handleCreateOrganization = () => {
+    router.push('/settings/organization/create');
+  };
+
+  const handleManageOrganizations = () => {
+    router.push('/settings/organization');
   };
 
   const handleSwitchToOrganization = async (orgId: string) => {
@@ -94,6 +98,10 @@ export function NoOrganizationState() {
           <Button onClick={handleCreateOrganization} className="w-full">
             <Plus className="h-4 w-4 mr-2" />
             Create Organization
+          </Button>
+          <Button variant="outline" onClick={handleManageOrganizations} className="w-full">
+            <Building className="h-4 w-4 mr-2" />
+            Manage Organizations
           </Button>
           {hasOtherOrganizations && (
             <Button variant="outline" className="w-full">

@@ -96,7 +96,7 @@ export interface Organization {
   owner_user_id?: string;
   owner_clerk_id?: string;
   name: string;
-  email: string;
+  email?: string;
   logo_url?: string;
   branding?: any; // JSONB
   created_at: string; // ISO 8601 datetime string

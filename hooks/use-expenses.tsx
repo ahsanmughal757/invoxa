@@ -44,7 +44,7 @@ export const ExpenseProvider = ({
   const { userId } = useAuth();
   // const [organizations, setOrganizations] = useState<Organization[] | []>([]);
   const [expenses, setExpenses] = useState<Expense[] | []>([]);
-  const { selectedOrganization } = useOrganization();
+  const { selectedOrganization, isEmpty: orgIsEmpty, isLoading: orgIsLoading } = useOrganization();
 
   // Loading state flags
   const [isLoading, setIsLoading] = useState(true);
@@ -75,12 +75,17 @@ export const ExpenseProvider = ({
           setErrorMessage(error instanceof Error ? error.message : "Failed to load expenses");
           setIsReady(false);
         }
+      } else if (!orgIsLoading && (orgIsEmpty || !selectedOrganization)) {
+        // Org loading complete, no org found → show empty state, not infinite loading
+        setIsLoading(false);
+        setIsEmpty(true);
+        setIsReady(false);
       } else {
-        // No org selected yet
+        // Still loading org
         setIsLoading(true);
       }
     })();
-  }, [selectedOrganization]);
+  }, [selectedOrganization, orgIsLoading, orgIsEmpty]);
 
   const getOrgExpenses = async (orgId: string) => {
     if (!orgId) {

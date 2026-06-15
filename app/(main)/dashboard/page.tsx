@@ -29,6 +29,8 @@ import {
   ErrorState,
   ReadyState,
 } from "@/components/ui/state-components";
+import { NoOrganizationState } from "@/components/empty-states/no-organization-state";
+import { useOrganization } from "@/hooks/use-organization";
 
 export default function DashboardPage() {
   const {
@@ -43,6 +45,7 @@ export default function DashboardPage() {
     isMember,
     orgName,
   } = useDashboardData();
+  const { isEmpty: orgIsEmpty } = useOrganization();
   const router = useRouter();
 
   // Loading State
@@ -53,6 +56,11 @@ export default function DashboardPage() {
         size="large"
       />
     );
+  }
+
+  // No Organization State
+  if (orgIsEmpty) {
+    return <NoOrganizationState />;
   }
 
   // Error State

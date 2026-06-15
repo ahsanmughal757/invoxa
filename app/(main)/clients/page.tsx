@@ -23,10 +23,11 @@ import {
   ErrorState,
   ReadyState,
 } from "@/components/ui/state-components";
+import { NoOrganizationState } from "@/components/empty-states/no-organization-state";
 
 export default function ClientsPage() {
   // const { organization } = useInvoices();
-  const { selectedOrganization: organization } = useOrganization();
+  const { selectedOrganization: organization, isEmpty: orgIsEmpty } = useOrganization();
   const {
     clients,
     updateClient,
@@ -69,6 +70,11 @@ export default function ClientsPage() {
   };
 
   console.log("clinents :", clients);
+
+  // No Organization State
+  if (orgIsEmpty) {
+    return <NoOrganizationState />;
+  }
 
   // Loading State
   if (isLoading) {

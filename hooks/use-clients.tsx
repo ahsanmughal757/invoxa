@@ -48,7 +48,7 @@ export const ClientsProvider = ({
 }) => {
   const { userId } = useAuth();
   const [clients, setClients] = useState<Client[] | any[]>([]);
-  const { selectedOrganization } = useOrganization();
+  const { selectedOrganization, isEmpty: orgIsEmpty, isLoading: orgIsLoading } = useOrganization();
 
   // Loading state flags
   const [isLoading, setIsLoading] = useState(true);
@@ -58,14 +58,18 @@ export const ClientsProvider = ({
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Fetch clients from the server when the provider mounts
     if (selectedOrganization?.id) {
       fetchClients(selectedOrganization.id);
-    } else if (selectedOrganization === null) {
-      // No org selected yet, keep loading
+    } else if (!orgIsLoading && (orgIsEmpty || !selectedOrganization)) {
+      // Org loading complete, no org found → show empty state, not infinite loading
+      setIsLoading(false);
+      setIsEmpty(true);
+      setIsReady(false);
+    } else {
+      // Still loading org
       setIsLoading(true);
     }
-  }, [selectedOrganization]);
+  }, [selectedOrganization, orgIsLoading, orgIsEmpty]);
 
   async function fetchClients(orgId: string) {
     setIsLoading(true);

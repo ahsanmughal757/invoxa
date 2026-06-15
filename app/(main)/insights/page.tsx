@@ -3,13 +3,16 @@
 import { InsightsDashboard } from "@/components/insights/insights-dashboard";
 import { useInvoices } from "@/hooks/use-invoices";
 import { EmptyState, ErrorState, LoadingState, ReadyState } from "@/components/ui/state-components";
+import { NoOrganizationState } from "@/components/empty-states/no-organization-state";
 import { useRouter } from "next/navigation";
 import { OrganizationGuard } from "@/components/guards/organization-guard";
 import { usePayments } from "@/hooks/use-payments";
 import { useExpenses } from "@/hooks/use-expenses";
 import { useClients } from "@/hooks/use-clients";
+import { useOrganization } from "@/hooks/use-organization";
 
 export default function InsightsPage() {
+  const { isEmpty: orgIsEmpty } = useOrganization();
   const { clients, isLoading: clientsLoading, isError: clientsError, errorMessage: clientsErrorMessage } = useClients();
   const { invoices, isLoading: invoicesLoading, isError: invoicesError, errorMessage: invoicesErrorMessage } = useInvoices();
   const { expenses, isLoading: expensesLoading, isError: expensesError, errorMessage: expensesErrorMessage } = useExpenses();
@@ -20,10 +23,17 @@ export default function InsightsPage() {
   const isError = clientsError || invoicesError || expensesError || paymentsError;
   const errorMessage = clientsErrorMessage || invoicesErrorMessage || expensesErrorMessage || paymentsErrorMessage;
 
+  // No Organization State
+  if (orgIsEmpty) {
+    return <NoOrganizationState />;
+  }
+
   // Loading State
   if (isLoading) {
     return (
-      <LoadingState message="Loading insights..." size="large" />
+      <OrganizationGuard>
+        <LoadingState message="Loading insights..." size="large" />
+      </OrganizationGuard>
     );
   }
 

@@ -10,9 +10,10 @@ import {
   ErrorState,
   ReadyState,
 } from "@/components/ui/state-components";
+import { NoOrganizationState } from "@/components/empty-states/no-organization-state";
 
 export default function ExpensesPage() {
-  const { selectedOrganization: organization } = useOrganization();
+  const { selectedOrganization: organization, isEmpty: orgIsEmpty } = useOrganization();
   const {
     expenses,
     createExpense,
@@ -24,6 +25,11 @@ export default function ExpensesPage() {
     errorMessage,
     isReady,
   } = useExpenses();
+
+  // No Organization State
+  if (orgIsEmpty) {
+    return <NoOrganizationState />;
+  }
 
   // Loading State
   if (isLoading) {

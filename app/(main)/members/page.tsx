@@ -33,6 +33,7 @@ import {
   ErrorState,
   LoadingState,
 } from "@/components/ui/state-components";
+import { NoOrganizationState } from "@/components/empty-states/no-organization-state";
 import { useRouter } from "next/navigation";
 import { OrganizationGuard } from "@/components/guards/organization-guard";
 import { useOrganization } from "@/hooks/use-organization";
@@ -48,7 +49,7 @@ export default function MembersManagementPage() {
   //   isError: hookError,
   //   errorMessage: hookErrorMessage,
   // } = useInvoices();
-  const { selectedOrganization: organization, memberOrganizations } =
+  const { selectedOrganization: organization, memberOrganizations, isEmpty: orgIsEmpty } =
     useOrganization();
 
   const router = useRouter();
@@ -141,6 +142,11 @@ export default function MembersManagementPage() {
 
     setFilteredActivities(filtered);
   }, [selectedMember, searchTerm, activities]);
+
+  // No Organization State
+  if (orgIsEmpty) {
+    return <NoOrganizationState />;
+  }
 
   // Error State
   if (error) {
