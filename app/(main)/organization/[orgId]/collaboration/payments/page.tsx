@@ -1,107 +1,132 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { 
-  Plus, 
-  Search, 
-  Edit, 
+import { useState } from "react";
+import { useParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Plus,
+  Search,
+  Edit,
   Trash2,
   Calendar,
   DollarSign,
-  FileText
-} from 'lucide-react';
-import { PaymentRecord } from '@/types/invoice';
-import { formatCurrency, formatDate } from '@/lib/utils';
-import { useInvoices } from '@/hooks/use-invoices';
-import { usePayments } from '@/hooks/use-payments';
-import toast from 'react-hot-toast';
+  FileText,
+} from "lucide-react";
+import { Invoice, PaymentRecord } from "@/types/invoice";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { useInvoices } from "@/hooks/use-invoices";
+import { usePayments } from "@/hooks/use-payments";
+import toast from "react-hot-toast";
 
 export default function PaymentsCollaborationPage() {
   const { orgId } = useParams<{ orgId: string }>();
   const { invoices, isLoading: invoicesLoading } = useInvoices();
-  const { payments, recordPayment, updatePayment, deletePayment } = usePayments();
+  const { payments, recordPayment, updatePayment, deletePayment } =
+    usePayments();
   const isLoading = invoicesLoading;
-  
+
   const [isCreating, setIsCreating] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<PaymentRecord | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [editingPayment, setEditingPayment] = useState<PaymentRecord | null>(
+    null,
+  );
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     amount: 0,
-    method: 'bank_transfer' as 'cash' | 'check' | 'bank_transfer' | 'credit_card' | 'paypal' | 'other',
-    received_on: new Date().toISOString().split('T')[0],
-    invoice_id: '',
-    reference: '',
-    notes: ''
+    method: "bank_transfer" as
+      | "cash"
+      | "check"
+      | "bank_transfer"
+      | "credit_card"
+      | "paypal"
+      | "other",
+    received_on: new Date().toISOString().split("T")[0],
+    invoice_id: "",
+    reference: "",
+    notes: "",
   });
 
   // Filter payments by organization through associated invoices
-  const orgPayments = payments.filter(payment => {
-    const invoice = invoices.find(inv => inv.id === payment.invoice_id);
+  const orgPayments = payments.filter((payment) => {
+    const invoice = invoices.find(
+      (inv: Invoice) => inv.id === payment.invoice_id,
+    );
     return invoice && invoice.org_id === orgId;
   });
-  
+
   // Filter based on search term
-  const filteredPayments = orgPayments.filter(payment => 
-    payment.reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    payment.method.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoices.some(inv => 
-      inv.id === payment.invoice_id && 
-      (inv.number.toLowerCase().includes(searchTerm.toLowerCase()) || 
-       inv.client_id.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
+  const filteredPayments = orgPayments.filter(
+    (payment) =>
+      payment.reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.method.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoices.some(
+        (inv: Invoice) =>
+          inv.id === payment.invoice_id &&
+          (inv.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            inv.client_id.toLowerCase().includes(searchTerm.toLowerCase())),
+      ),
   );
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     const { name, value, type } = e.target;
-    const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
-    
-    setFormData(prev => ({
+    const checked =
+      type === "checkbox" ? (e.target as HTMLInputElement).checked : undefined;
+
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : name === 'amount' ? parseFloat(value) || 0 : name === 'invoice_id' ? value : value
+      [name]:
+        type === "checkbox"
+          ? checked
+          : name === "amount"
+            ? parseFloat(value) || 0
+            : name === "invoice_id"
+              ? value
+              : value,
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (editingPayment) {
         // Update existing payment
         await updatePayment(editingPayment.id, formData);
-        toast.success('Payment updated successfully');
+        toast.success("Payment updated successfully");
       } else {
         // Create new payment
         await recordPayment(formData);
-        toast.success('Payment created successfully');
+        toast.success("Payment created successfully");
       }
-      
+
       // Reset form and state
       setFormData({
         amount: 0,
-        method: 'bank_transfer',
-        received_on: new Date().toISOString().split('T')[0],
-        invoice_id: '',
-        reference: '',
-        notes: ''
+        method: "bank_transfer",
+        received_on: new Date().toISOString().split("T")[0],
+        invoice_id: "",
+        reference: "",
+        notes: "",
       });
       setIsCreating(false);
       setEditingPayment(null);
     } catch (error: any) {
-      console.error('Error saving payment:', error);
-      toast.error(error.message || 'Failed to save payment');
+      console.error("Error saving payment:", error);
+      toast.error(error.message || "Failed to save payment");
     }
   };
 
@@ -110,25 +135,25 @@ export default function PaymentsCollaborationPage() {
     setFormData({
       amount: payment.amount,
       method: payment.method,
-      received_on: payment.received_on.split('T')[0], // Convert to YYYY-MM-DD format
+      received_on: payment.received_on.split("T")[0], // Convert to YYYY-MM-DD format
       invoice_id: payment.invoice_id,
-      reference: payment.reference || '',
-      notes: payment.notes || ''
+      reference: payment.reference || "",
+      notes: payment.notes || "",
     });
     setIsCreating(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this payment?')) {
+    if (!confirm("Are you sure you want to delete this payment?")) {
       return;
     }
-    
+
     try {
       await deletePayment(id);
-      toast.success('Payment deleted successfully');
+      toast.success("Payment deleted successfully");
     } catch (error: any) {
-      console.error('Error deleting payment:', error);
-      toast.error(error.message || 'Failed to delete payment');
+      console.error("Error deleting payment:", error);
+      toast.error(error.message || "Failed to delete payment");
     }
   };
 
@@ -137,11 +162,11 @@ export default function PaymentsCollaborationPage() {
     setEditingPayment(null);
     setFormData({
       amount: 0,
-      method: 'bank_transfer',
-      received_on: new Date().toISOString().split('T')[0],
-      invoice_id: '',
-      reference: '',
-      notes: ''
+      method: "bank_transfer",
+      received_on: new Date().toISOString().split("T")[0],
+      invoice_id: "",
+      reference: "",
+      notes: "",
     });
   };
 
@@ -157,15 +182,19 @@ export default function PaymentsCollaborationPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Payments Collaboration</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Payments Collaboration
+          </h1>
           <p className="text-gray-600 mt-1">
             Manage payments for your organization
           </p>
         </div>
-        <Button onClick={() => {
-          setEditingPayment(null);
-          setIsCreating(true);
-        }}>
+        <Button
+          onClick={() => {
+            setEditingPayment(null);
+            setIsCreating(true);
+          }}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Payment
         </Button>
@@ -187,7 +216,9 @@ export default function PaymentsCollaborationPage() {
       {isCreating ? (
         <Card>
           <CardHeader>
-            <CardTitle>{editingPayment ? 'Edit Payment' : 'Add New Payment'}</CardTitle>
+            <CardTitle>
+              {editingPayment ? "Edit Payment" : "Add New Payment"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -254,8 +285,8 @@ export default function PaymentsCollaborationPage() {
                   >
                     <option value="">Select an invoice</option>
                     {invoices
-                      .filter(inv => inv.org_id === orgId) // Only show invoices for this organization
-                      .map(invoice => (
+                      .filter((inv: Invoice) => inv.org_id === orgId) // Only show invoices for this organization
+                      .map((invoice: Invoice) => (
                         <option key={invoice.id} value={invoice.id}>
                           {invoice.number} - {formatCurrency(invoice.total)}
                         </option>
@@ -288,7 +319,7 @@ export default function PaymentsCollaborationPage() {
                   Cancel
                 </Button>
                 <Button type="submit">
-                  {editingPayment ? 'Update Payment' : 'Create Payment'}
+                  {editingPayment ? "Update Payment" : "Create Payment"}
                 </Button>
               </div>
             </form>
@@ -304,7 +335,9 @@ export default function PaymentsCollaborationPage() {
               <div className="text-center py-8 text-gray-500">
                 <FileText className="h-12 w-12 mx-auto text-gray-300 mb-2" />
                 <p>No payments found</p>
-                <p className="text-sm mt-1">Add your first payment using the button above</p>
+                <p className="text-sm mt-1">
+                  Add your first payment using the button above
+                </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -321,18 +354,26 @@ export default function PaymentsCollaborationPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredPayments.map((payment) => {
-                      const invoice = invoices.find(inv => inv.id === payment.invoice_id);
+                      const invoice = invoices.find(
+                        (inv: Invoice) => inv.id === payment.invoice_id,
+                      );
                       return (
                         <TableRow key={payment.id}>
                           <TableCell className="font-medium">
-                            {invoice ? invoice.number : 'N/A'}
+                            {invoice ? invoice.number : "N/A"}
                           </TableCell>
-                          <TableCell>{formatCurrency(payment.amount)}</TableCell>
                           <TableCell>
-                            <span className="capitalize">{payment.method.replace('_', ' ')}</span>
+                            {formatCurrency(payment.amount)}
                           </TableCell>
-                          <TableCell>{formatDate(payment.received_on)}</TableCell>
-                          <TableCell>{payment.reference || '-'}</TableCell>
+                          <TableCell>
+                            <span className="capitalize">
+                              {payment.method.replace("_", " ")}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {formatDate(payment.received_on)}
+                          </TableCell>
+                          <TableCell>{payment.reference || "-"}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
                               <Button

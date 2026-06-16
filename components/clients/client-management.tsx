@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import Link from "next/link";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -91,6 +92,9 @@ export function ClientManagement({
   const [searchTerm, setSearchTerm] = useState("");
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingClient, setDeletingClient] = useState<string | null>(null);
+  const [inDeletion, setInDeletion] = useState(false);
   const { selectedOrganization } = useOrganization();
 
   const filteredClients = clients.filter(
@@ -101,18 +105,25 @@ export function ClientManagement({
   );
 
   const handleSaveClient = async (clientData: ClientFormData) => {
-    if (editingClient && selectedOrganization && selectedOrganization.id) {
-      if (editingClient.id)
-        await onUpdateClient(
-          editingClient.id,
-          selectedOrganization.id,
-          clientData,
-        );
-    } else {
-      await onCreateClient(clientData);
+    try {
+      if (editingClient && selectedOrganization && selectedOrganization.id) {
+        if (editingClient.id)
+          await onUpdateClient(
+            editingClient.id,
+            selectedOrganization.id,
+            clientData,
+          );
+
+        toast.success("Cliend Information Updated");
+      } else {
+        await onCreateClient(clientData);
+        toast.success("Added New Client");
+      }
+      setIsDialogOpen(false);
+      setEditingClient(null);
+    } catch (error) {
+      toast.error("An error occured during the operation");
     }
-    setIsDialogOpen(false);
-    setEditingClient(null);
   };
 
   const openEditDialog = (client?: Client) => {
@@ -121,12 +132,26 @@ export function ClientManagement({
   };
 
   const handleDeleteClient = async (id: string) => {
-    if (
-      confirm(
-        "Are you sure you want to delete this client? This action cannot be undone.",
-      )
-    ) {
-      await onDeleteClient(id);
+    setDeleteDialogOpen(true);
+    setDeletingClient(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      setInDeletion(true);
+
+      const id = deletingClient;
+      if (id) await onDeleteClient(id);
+
+      setDeletingClient(null);
+      setInDeletion(false);
+      setDeleteDialogOpen(false);
+      toast.success("Client deleted");
+    } catch (error) {
+      setDeletingClient(null);
+      setInDeletion(false);
+      setDeleteDialogOpen(false);
+      toast.error("Something went wrong! Error deleting client");
     }
   };
 
@@ -158,6 +183,48 @@ export function ClientManagement({
               onSave={handleSaveClient}
               onCancel={() => setIsDialogOpen(false)}
             />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          {/*<DialogTrigger asChild>*/}
+          {/*<Button
+              onClick={() => openEditDialog()}
+              className="flex items-center"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+
+            </Button>*/}
+          {/*</DialogTrigger>*/}
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Delete Client</DialogTitle>
+            </DialogHeader>
+            {/*<ClientForm
+              client={editingClient}
+              onSave={handleSaveClient}
+              onCancel={() => setDeleteDialogOpen(false)}
+            />*/}
+            <div className="text-base font-normal">
+              Are you sure you want to delete this client? This action cant be
+              reversed!
+            </div>
+            <div className="flex justify-end">
+              <Button
+                variant={"destructive"}
+                className="mr-4"
+                onClick={handleConfirmDelete}
+                disabled={inDeletion ? true : false}
+              >
+                {inDeletion ? "Deleting..." : "Confirm"}
+              </Button>
+              <Button
+                variant={"outline"}
+                onClick={() => setDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
@@ -369,21 +436,21 @@ function ClientForm({ client, onSave, onCancel }: ClientFormProps) {
     //   notes: client?.notes || "",
     // },
     defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
+      name: "" || client?.name,
+      email: "" || client?.email,
+      phone: "" || client?.phone,
       billing_address: {
-        street: "",
-        city: "",
-        state: "",
-        postal_code: "",
-        country: "",
+        street: "" || client?.billing_address?.street,
+        city: "" || client?.billing_address?.city,
+        state: "" || client?.billing_address?.state,
+        postal_code: "" || client?.billing_address?.postal_code,
+        country: "" || client?.billing_address?.country,
       },
-      company: "",
-      tax_id: "",
-      payment_terms: 0,
-      currency: "USD",
-      notes: "",
+      company: "" || client?.company,
+      tax_id: "" || client?.tax_id,
+      payment_terms: 0 || client?.payment_terms,
+      currency: "USD" || client?.currency,
+      notes: "" || client?.notes,
     },
   });
 

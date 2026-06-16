@@ -8,21 +8,18 @@ import { useRouter } from "next/navigation";
 import { Organization } from "@/types/invoice";
 import toast from "react-hot-toast";
 
-import { getOrganizationByOwnerId } from "@/lib/queries/organizations";
+import { getOrganizationsByOwnerId } from "@/lib/queries/organizations";
 import { useAuth } from "@clerk/nextjs";
 
 export default function OrganizationEditPage() {
   const { userId } = useAuth();
 
-  const {
-    selectedOrganization: organization,
-    updateOrganization,
-  } = useOrganization();
+  const { selectedOrganization: organization, updateOrganization } =
+    useOrganization();
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-
-  // const fetchOrganization = async () => { 
+  // const fetchOrganization = async () => {
   //   try {
   //     const fetchedOrg = await getOrganizationByOwnerId(userId);
   //     console.log("Fetched organization -->:", fetchedOrg);
@@ -36,7 +33,6 @@ export default function OrganizationEditPage() {
   //     console.error(error);
   //   }
   // }
-
 
   // useEffect(() => {
   //   (async () => {

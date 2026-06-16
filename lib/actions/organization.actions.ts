@@ -2,7 +2,7 @@
 
 import {
   createOrganization,
-  getOrganizationByOwnerId,
+  getOrganizationsByOwnerId,
   updateOrganization as updateOrgRepo,
 } from "@/lib/repositories/organizations.repository.func";
 import { getUserByClerkId } from "@/lib/repositories/users.repository.func";
@@ -145,7 +145,7 @@ export async function getOrganizationAction() {
     }
 
     // Get the organization using the owner_user_id
-    const organization = await getOrganizationByOwnerId(
+    const organization = await getOrganizationsByOwnerId(
       userProfile.clerk_user_id,
     );
 
@@ -222,7 +222,9 @@ export async function getOrganizationsForUserAction() {
     const supabase = await createAdminClient();
 
     // Get organizations where user is owner
-    const ownedOrgs = await getOrganizationByOwnerId(userProfile.clerk_user_id);
+    const ownedOrgs = await getOrganizationsByOwnerId(
+      userProfile.clerk_user_id,
+    );
 
     // Get organizations where user is a member
     const { data: memberOrgs, error: memberError } = await supabase

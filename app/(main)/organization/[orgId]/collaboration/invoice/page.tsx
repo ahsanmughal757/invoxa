@@ -1,95 +1,100 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  FileText, 
-  Plus, 
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  FileText,
+  Plus,
   Search,
   Filter,
   Eye,
   Edit,
-  Trash2
-} from 'lucide-react';
-import { InvoiceForm } from '@/components/invoice/invoice-form';
-import { InvoiceList } from '@/components/invoice/invoice-list';
-import { InvoicePreview } from '@/components/invoice/invoice-preview';
-import { useInvoices } from '@/hooks/use-invoices';
-import { useClients } from '@/hooks/use-clients';
-import { useOrganization } from '@/hooks/use-organization';
-import { Invoice } from '@/types/invoice';
-import toast from 'react-hot-toast';
+  Trash2,
+} from "lucide-react";
+import { InvoiceForm } from "@/components/invoice/invoice-form";
+import { InvoiceList } from "@/components/invoice/invoice-list";
+import { InvoicePreview } from "@/components/invoice/invoice-preview";
+import { useInvoices } from "@/hooks/use-invoices";
+import { useClients } from "@/hooks/use-clients";
+import { useOrganization } from "@/hooks/use-organization";
+import { Invoice } from "@/types/invoice";
+import toast from "react-hot-toast";
 
 export default function InvoiceCollaborationPage() {
   const { orgId } = useParams<{ orgId: string }>();
   const router = useRouter();
   const { userId } = useAuth();
-  const { invoices, isLoading, createInvoice, updateInvoice, deleteInvoice } = useInvoices();
+  const { invoices, isLoading, createInvoice, updateInvoice, deleteInvoice } =
+    useInvoices();
   const { clients } = useClients();
   const { selectedOrganization: organization } = useOrganization();
-  
+
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Filter invoices by organization if needed
-  const orgInvoices = invoices.filter(invoice => invoice.org_id === orgId);
+  const orgInvoices = invoices.filter(
+    (invoice: Invoice) => invoice.org_id === orgId,
+  );
 
   // Filter invoices based on search term
-  const filteredInvoices = orgInvoices.filter(invoice => 
-    invoice.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.client_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    clients.some(client => 
-      client.id === invoice.client_id && 
-      (client.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-       client.email.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
+  const filteredInvoices = orgInvoices.filter(
+    (invoice: Invoice) =>
+      invoice.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.client_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      clients.some(
+        (client) =>
+          client.id === invoice.client_id &&
+          (client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            client.email.toLowerCase().includes(searchTerm.toLowerCase())),
+      ),
   );
 
   const handleCreateInvoice = async (invoiceData: Partial<Invoice>) => {
     try {
       if (!userId) {
-        throw new Error('User not authenticated');
+        throw new Error("User not authenticated");
       }
-      
+
       await createInvoice(invoiceData);
-      toast.success('Invoice created successfully');
+      toast.success("Invoice created successfully");
       setIsCreating(false);
     } catch (error: any) {
-      console.error('Error creating invoice:', error);
-      toast.error(error.message || 'Failed to create invoice');
+      console.error("Error creating invoice:", error);
+      toast.error(error.message || "Failed to create invoice");
     }
   };
 
   const handleUpdateInvoice = async (id: string, updates: Partial<Invoice>) => {
     try {
       await updateInvoice(id, updates);
-      toast.success('Invoice updated successfully');
+      toast.success("Invoice updated successfully");
       setSelectedInvoice(null);
     } catch (error: any) {
-      console.error('Error updating invoice:', error);
-      toast.error(error.message || 'Failed to update invoice');
+      console.error("Error updating invoice:", error);
+      toast.error(error.message || "Failed to update invoice");
     }
   };
 
   const handleDeleteInvoice = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this invoice?')) {
+    if (!confirm("Are you sure you want to delete this invoice?")) {
       return;
     }
-    
+
     try {
       await deleteInvoice(id);
-      toast.success('Invoice deleted successfully');
+      toast.success("Invoice deleted successfully");
       if (selectedInvoice?.id === id) {
         setSelectedInvoice(null);
       }
     } catch (error: any) {
-      console.error('Error deleting invoice:', error);
-      toast.error(error.message || 'Failed to delete invoice');
+      console.error("Error deleting invoice:", error);
+      toast.error(error.message || "Failed to delete invoice");
     }
   };
 
@@ -118,7 +123,9 @@ export default function InvoiceCollaborationPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Invoice Collaboration</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Invoice Collaboration
+          </h1>
           <p className="text-gray-600 mt-1">
             Manage invoices for your organization
           </p>
@@ -142,11 +149,15 @@ export default function InvoiceCollaborationPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="list" className="space-y-4" onValueChange={(value) => {
-        if (value === 'create') {
-          setIsCreating(true);
-        }
-      }}>
+      <Tabs
+        defaultValue="list"
+        className="space-y-4"
+        onValueChange={(value) => {
+          if (value === "create") {
+            setIsCreating(true);
+          }
+        }}
+      >
         <TabsList>
           <TabsTrigger value="list">Invoice List</TabsTrigger>
           <TabsTrigger value="create">Create Invoice</TabsTrigger>
@@ -188,35 +199,46 @@ export default function InvoiceCollaborationPage() {
           <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-auto">
             <div className="p-4 border-b flex justify-between items-center">
               <h2 className="text-xl font-bold">Invoice Preview</h2>
-              <Button variant="outline" onClick={() => setSelectedInvoice(null)}>
+              <Button
+                variant="outline"
+                onClick={() => setSelectedInvoice(null)}
+              >
                 Close
               </Button>
             </div>
             <div className="p-4">
-              <InvoicePreview 
-                invoice={selectedInvoice} 
-                client={clients.find(c => c.id === selectedInvoice.client_id)!}
+              <InvoicePreview
+                invoice={selectedInvoice}
+                client={
+                  clients.find((c) => c.id === selectedInvoice.client_id)!
+                }
                 organization={organization}
                 onPrint={() => window.print()}
                 onDownload={() => {
                   // Implement download functionality
-                  alert('Download functionality would be implemented here');
+                  alert("Download functionality would be implemented here");
                 }}
                 onSend={() => {
                   // Implement send functionality
-                  alert('Send functionality would be implemented here');
+                  alert("Send functionality would be implemented here");
                 }}
               />
             </div>
             <div className="p-4 border-t flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setSelectedInvoice(null)}>
+              <Button
+                variant="outline"
+                onClick={() => setSelectedInvoice(null)}
+              >
                 Close
               </Button>
               <Button onClick={() => setSelectedInvoice(selectedInvoice)}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </Button>
-              <Button variant="destructive" onClick={() => handleDeleteInvoice(selectedInvoice.id)}>
+              <Button
+                variant="destructive"
+                onClick={() => handleDeleteInvoice(selectedInvoice.id)}
+              >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
               </Button>

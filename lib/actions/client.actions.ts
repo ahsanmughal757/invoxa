@@ -12,7 +12,7 @@ import { auth } from "@clerk/nextjs/server";
 import { logSuccess, Logger } from "@/lib/utils/logger";
 import {
   getOrganizationById,
-  getOrganizationByOwnerId,
+  getOrganizationsByOwnerId,
 } from "@/lib/repositories/organizations.repository.func";
 import { getMemberAssociatedOrganization } from "../queries/organizations";
 import { Organization, OrganizationMember } from "@/types/invoice";
@@ -73,7 +73,7 @@ export async function createClientAction(clientData: ClientData) {
     // Get organization ID from user profile
     const ownerClerkId = userProfile.clerk_user_id;
 
-    const userOrganization = await getOrganizationByOwnerId(ownerClerkId);
+    const userOrganization = await getOrganizationsByOwnerId(ownerClerkId);
 
     if (!userOrganization) {
       return {
@@ -126,7 +126,7 @@ export async function createClientForOrgAction(
     // Get organization ID from user profile
     const ownerClerkId = userProfile.clerk_user_id;
 
-    const userOrganization = await getOrganizationByOwnerId(ownerClerkId);
+    const userOrganization = await getOrganizationsByOwnerId(ownerClerkId);
 
     if (!userOrganization) {
       return {
@@ -178,7 +178,7 @@ export async function updateClientAction(
       throw new Error("User profile not found");
     }
 
-    const userOrganization = await getOrganizationById(orgId);
+    const userOrganization = await getOrganizationsByOwnerId(orgId);
 
     if (!userOrganization.id) {
       throw new Error("Organization not found!");
@@ -212,6 +212,9 @@ export async function deleteClientAction(clientId: string) {
     if (!userId) {
       throw new Error("Unauthorized");
     }
+    if (!clientId) {
+      throw new Error("Client ID is required");
+    }
 
     // Get user profile to get organization ID
     userProfile = await getSupabaseUser();
@@ -219,22 +222,16 @@ export async function deleteClientAction(clientId: string) {
       throw new Error("User profile not found");
     }
 
-    // Handle the type properly since orgId can be null
-    if (!userProfile.org_id) {
-      throw new Error("Organization ID not found");
-    }
-    const orgId = userProfile.org_id;
-
-    if (!clientId) {
-      throw new Error("Client ID is required");
-    }
-
     await deleteClient(clientId);
 
     // Log successful client deletion
-    logSuccess.clientDeleted(clientId, userId, orgId);
+    Logger.success(
+      "DELETE_CLIENT_ACTION",
+      `Client deleted successfully clientId: ${clientId}`,
+      null,
+    );
 
-    revalidateTag(CACHE_TAGS.CLIENTS(orgId));
+    revalidateTag(CACHE_TAGS.CLIENTS(userProfile.org_id));
 
     return { success: true };
   } catch (error) {
@@ -249,7 +246,7 @@ export async function deleteClientAction(clientId: string) {
   }
 }
 
-export async function getAllClientsAction() {
+export async function getAllClientsAction(orgId: string) {
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -263,16 +260,22 @@ export async function getAllClientsAction() {
     }
 
     // Get organization ID from user profile
-    let ownerClerkId = userProfile.clerk_user_id;
+    // let ownerClerkId = userProfile.clerk_user_id;
 
-    const userOrganization = await getOrganizationByOwnerId(ownerClerkId);
+    // const userOrganization = await getOrganizationsByOwnerId(ownerClerkId);
 
-    if (!userOrganization) {
+    if (!orgId) {
       // Return success with empty array for empty state
+      Logger.error(
+        "GET_ALL_CLIENTS_ACTION",
+        "No organization associated with the authorized user.",
+        {},
+      );
       return { success: true, data: [] };
     }
 
-    const orgId = userOrganization.id as string;
+    // const orgId = userOrganization.id;
+    console.log("Org ID: -------------->", orgId);
 
     const clients = await getClientsByOrgId(orgId);
 

@@ -57,10 +57,14 @@ export default function OrganizationCollaborationDashboard() {
   // Calculate organization statistics
   useEffect(() => {
     if (!isLoading) {
-      const orgInvoices = invoices.filter((inv) => inv.org_id === orgId);
+      const orgInvoices = invoices.filter(
+        (inv: Invoice) => inv.org_id === orgId,
+      );
       const orgExpenses = expenses.filter((exp) => exp.org_id === orgId);
       const orgPayments = payments.filter((pay) => {
-        const invoice = invoices.find((inv) => inv.id === pay.invoice_id);
+        const invoice = invoices.find(
+          (inv: Invoice) => inv.id === pay.invoice_id,
+        );
         return invoice && invoice.org_id === orgId;
       });
       const orgClients = clients.filter((client) => client.org_id === orgId);
@@ -70,10 +74,10 @@ export default function OrganizationCollaborationDashboard() {
         0,
       );
       const pendingInvoices = orgInvoices.filter(
-        (inv) => inv.status === "sent",
+        (inv: Invoice) => inv.status === "sent",
       ).length;
       const overdueInvoices = orgInvoices.filter(
-        (inv) =>
+        (inv: Invoice) =>
           inv.status === "overdue" && new Date(inv.due_date) < new Date(),
       ).length;
 

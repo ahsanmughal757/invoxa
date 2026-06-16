@@ -9,14 +9,8 @@ import { FEATURES } from "@/hooks/use-subscription-access";
 import { SubscriptionGuard } from "@/components/subscription/subscription-guard";
 import { Client } from "@/types/invoice";
 import { Users } from "lucide-react";
-import { OrganizationGuard } from "@/components/guards/organization-guard";
-import { useInvoices } from "@/hooks/use-invoices";
-import { useSelectedOrganization } from "@/hooks/use-selected-org";
 import { useClients } from "@/hooks/use-clients";
-import { ClientGuard } from "@/components/guards/client-guard";
 import { useOrganization } from "@/hooks/use-organization";
-import { createClientForOrg } from "@/lib/queries/collaboration/clients";
-import { createClientForOrgAction } from "@/lib/actions/client.actions";
 import {
   LoadingState,
   EmptyState,
@@ -27,12 +21,13 @@ import { NoOrganizationState } from "@/components/empty-states/no-organization-s
 
 export default function ClientsPage() {
   // const { organization } = useInvoices();
-  const { selectedOrganization: organization, isEmpty: orgIsEmpty } = useOrganization();
+  const { selectedOrganization: organization, isEmpty: orgIsEmpty } =
+    useOrganization();
   const {
     clients,
     updateClient,
     deleteClient,
-    createClientByMemberOfOrg,
+    createClientForOrg,
     isLoading,
     isEmpty,
     isError,
@@ -53,9 +48,7 @@ export default function ClientsPage() {
       ...clientFormData,
       org_id: organization.id,
     };
-    // await createClientForOrgAction(client, selectedOrganization as any);
-    await createClientForOrgAction(cleanedClient, organization);
-    // Return void to match expected prop type
+    await createClientForOrg(cleanedClient, organization);
     return Promise.resolve();
   };
 
@@ -68,8 +61,6 @@ export default function ClientsPage() {
     // Return void to match expected prop  type
     return Promise.resolve();
   };
-
-  console.log("clinents :", clients);
 
   // No Organization State
   if (orgIsEmpty) {

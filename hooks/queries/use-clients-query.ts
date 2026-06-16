@@ -13,7 +13,7 @@ import { Client } from "@/types/invoice";
 export function useClientsQuery(orgId: string | undefined) {
   return useQuery({
     queryKey: ["clients", orgId],
-    queryFn: () => getAllClientsAction(),
+    queryFn: () => getAllClientsAction(orgId!),
     enabled: !!orgId,
     staleTime: 30_000,
     select: (data) => {

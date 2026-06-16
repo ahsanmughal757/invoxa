@@ -4,6 +4,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPaymentsByInvoiceIds } from "@/lib/repositories/payments.repository.func";
 import { PaymentRecord } from "@/types/invoice";
 
+async function getPaymentsForOrgAction(orgId: string) {
+  const { getPaymentsForOrg } = await import(
+    "@/lib/queries/collaboration/payments"
+  );
+  return getPaymentsForOrg(orgId);
+}
+
 async function recordPaymentForOrgAction(
   paymentData: Partial<Omit<PaymentRecord, "id">>,
   orgId: string,
@@ -33,9 +40,18 @@ async function deletePaymentForOrgAction(id: string, userId: string) {
   return deletePaymentForOrg(id, userId);
 }
 
-export function usePaymentsQuery(invoiceIds: string[]) {
+export function usePaymentsQuery(orgId: string | undefined) {
   return useQuery({
-    queryKey: ["payments", invoiceIds],
+    queryKey: ["payments", orgId],
+    queryFn: () => getPaymentsForOrgAction(orgId!),
+    enabled: !!orgId,
+    staleTime: 30_000,
+  });
+}
+
+export function usePaymentsByInvoiceIdsQuery(invoiceIds: string[]) {
+  return useQuery({
+    queryKey: ["payments", "by-invoices", invoiceIds],
     queryFn: () => getPaymentsByInvoiceIds(invoiceIds),
     enabled: invoiceIds.length > 0,
     staleTime: 30_000,
@@ -54,14 +70,14 @@ export function useRecordPaymentMutation(orgId: string) {
       userId: string;
     }) => recordPaymentForOrgAction(data, orgId, userId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["payments"] });
-      queryClient.invalidateQueries({ queryKey: ["invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["payments", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["invoices", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", orgId] });
     },
   });
 }
 
-export function useUpdatePaymentMutation() {
+export function useUpdatePaymentMutation(orgId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -75,23 +91,23 @@ export function useUpdatePaymentMutation() {
       userId: string;
     }) => updatePaymentForOrgAction(id, updates, userId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["payments"] });
-      queryClient.invalidateQueries({ queryKey: ["invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["payments", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["invoices", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", orgId] });
     },
   });
 }
 
-export function useDeletePaymentMutation() {
+export function useDeletePaymentMutation(orgId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, userId }: { id: string; userId: string }) =>
       deletePaymentForOrgAction(id, userId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["payments"] });
-      queryClient.invalidateQueries({ queryKey: ["invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["payments", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["invoices", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", orgId] });
     },
   });
 }

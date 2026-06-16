@@ -15,7 +15,7 @@ export const getOrganizationById = cache(async (id: string) => {
     .single();
 
   if (error) {
-    if (error.code === 'PGRST116' || error.message.includes('Row not found')) {
+    if (error.code === "PGRST116" || error.message.includes("Row not found")) {
       // Organization not found - return null as empty state
       Logger.info("GET_ORGANIZATION", "Organization not found", {
         entityId: id,
@@ -136,142 +136,144 @@ export const createOrganization = async (
 };
 
 // Get organization by owner user ID
-export const getOrganizationByOwnerId = cache(async (
-  ownerUserId: string | null | undefined,
-) => {
-  const supabase = await createAdminClient();
+export const getOrganizationsByOwnerId = cache(
+  async (ownerUserId: string | null | undefined) => {
+    const supabase = await createAdminClient();
 
-  if (!ownerUserId) {
-    console.log(
-      "Owner user ID is required to fetch organization, received:",
-      ownerUserId,
-    );
-    return null;
-  }
+    if (!ownerUserId) {
+      console.log(
+        "Owner user ID is required to fetch organization, received:",
+        ownerUserId,
+      );
+      return null;
+    }
 
-  console.log("ownerUserId: ", ownerUserId);
-  const { data, error } = await supabase
-    .from("organizations")
-    .select("*")
-    .eq("owner_clerk_id", ownerUserId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
+    console.log("ownerUserId: ", ownerUserId);
+    const { data, error } = await supabase
+      .from("organizations")
+      .select("*")
+      .eq("owner_clerk_id", ownerUserId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
 
-  if (error && error.code !== "PGRST116") {
-    // PGRST116 is "Row not found" error
-    Logger.error(
-      "GET_ORGANIZATION",
-      "Error fetching organization by owner ID",
-      error,
-      { entityId: ownerUserId ? ownerUserId : undefined },
-    );
-    throw error;
-  }
+    if (error && error.code !== "PGRST116") {
+      // PGRST116 is "Row not found" error
+      Logger.error(
+        "GET_ORGANIZATION",
+        "Error fetching organization by owner ID",
+        error,
+        { entityId: ownerUserId ? ownerUserId : undefined },
+      );
+      throw error;
+    }
 
-  if (!data) {
-    Logger.info("GET_ORGANIZATION", "No organization found for owner", {
-      entityId: ownerUserId ? ownerUserId : undefined,
-      entityType: "organization",
-    });
-    return null;
-  }
-
-  Logger.info(
-    "GET_ORGANIZATION",
-    "Organization fetched successfully by owner ID",
-    {
-      entityId: data.id,
-      entityType: "organization",
-    },
-  );
-  return data as Organization;
-});
-
-export const getMemberAssociatedOrganization = cache(async (ownerUserId: string) => {
-  const supabase = await createAdminClient();
-
-  if (!ownerUserId) {
-    console.log(
-      "User ID is required to fetch organization for the member, received:",
-      ownerUserId,
-    );
-    return null;
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("clerk_user_id", ownerUserId)
-    .maybeSingle();
-
-  if (profileError) {
-    Logger.error(
-      "MEMBER_ORGANIZATION",
-      "Error fetching users member organization",
-      profileError,
-      {
-        userId: ownerUserId,
-      },
-    );
-    throw profileError;
-  }
-
-  if (!profile) {
-    Logger.info(
-      "MEMBER_ORGANIZATION",
-      "No member organization found for given user",
-      {
-        userId: ownerUserId,
-      },
-    );
-    return [];
-  }
-
-  const { data, error } = await supabase
-    .from("org_members")
-    .select(
-      `
-      *,
-      organization:organizations(*)
-      `,
-    )
-    .eq("user_id", profile?.id);
-
-  if (error) {
-    // PGRST116 is "Row not found" error
-    Logger.error(
-      "MEMBER_ORGANIZATION",
-      "Error fetching member organization by member ID",
-      error,
-      { entityId: ownerUserId ? ownerUserId : undefined },
-    );
-    throw error;
-  }
-
-  if (!data) {
-    Logger.info(
-      "MEMBER_ORGANIZATION",
-      "No member organizations found for given user",
-      {
+    if (!data) {
+      Logger.info("GET_ORGANIZATION", "No organization found for owner", {
         entityId: ownerUserId ? ownerUserId : undefined,
+        entityType: "organization",
+      });
+      return null;
+    }
+
+    Logger.info(
+      "GET_ORGANIZATION",
+      "Organization fetched successfully by owner ID",
+      {
+        entityId: data.id,
         entityType: "organization",
       },
     );
-    return null;
-  }
+    return data as Organization;
+  },
+);
 
-  Logger.info(
-    "MEMBER_ORGANIZATION",
-    "Member organizations fetched successfully by member ID",
-    {
-      entityId: data[0]?.id,
-      entityType: "org_members",
-    },
-  );
+export const getMemberAssociatedOrganization = cache(
+  async (ownerUserId: string) => {
+    const supabase = await createAdminClient();
 
-  return data as OrganizationMember[];
-});
+    if (!ownerUserId) {
+      console.log(
+        "User ID is required to fetch organization for the member, received:",
+        ownerUserId,
+      );
+      return null;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("clerk_user_id", ownerUserId)
+      .maybeSingle();
+
+    if (profileError) {
+      Logger.error(
+        "MEMBER_ORGANIZATION",
+        "Error fetching users member organization",
+        profileError,
+        {
+          userId: ownerUserId,
+        },
+      );
+      throw profileError;
+    }
+
+    if (!profile) {
+      Logger.info(
+        "MEMBER_ORGANIZATION",
+        "No member organization found for given user",
+        {
+          userId: ownerUserId,
+        },
+      );
+      return [];
+    }
+
+    const { data, error } = await supabase
+      .from("org_members")
+      .select(
+        `
+      *,
+      organization:organizations(*)
+      `,
+      )
+      .eq("user_id", profile?.id);
+
+    if (error) {
+      // PGRST116 is "Row not found" error
+      Logger.error(
+        "MEMBER_ORGANIZATION",
+        "Error fetching member organization by member ID",
+        error,
+        { entityId: ownerUserId ? ownerUserId : undefined },
+      );
+      throw error;
+    }
+
+    if (!data) {
+      Logger.info(
+        "MEMBER_ORGANIZATION",
+        "No member organizations found for given user",
+        {
+          entityId: ownerUserId ? ownerUserId : undefined,
+          entityType: "organization",
+        },
+      );
+      return null;
+    }
+
+    Logger.info(
+      "MEMBER_ORGANIZATION",
+      "Member organizations fetched successfully by member ID",
+      {
+        entityId: data[0]?.id,
+        entityType: "org_members",
+      },
+    );
+
+    return data as OrganizationMember[];
+  },
+);
 
 // Get profile by user ID
 export const getProfileByUserId = cache(async (userId: string) => {
@@ -284,7 +286,7 @@ export const getProfileByUserId = cache(async (userId: string) => {
     .single();
 
   if (error) {
-    if (error.code === 'PGRST116' || error.message.includes('Row not found')) {
+    if (error.code === "PGRST116" || error.message.includes("Row not found")) {
       // Profile not found - return null as empty state
       Logger.info("GET_PROFILE", "Profile not found", {
         userId,
@@ -328,7 +330,7 @@ export const getUserOrganizations = cache(async (userId: string) => {
         "GET_USER_ORGANIZATIONS",
         "Error fetching profile",
         profileError,
-        { userId }
+        { userId },
       );
       throw profileError;
     }
@@ -349,7 +351,7 @@ export const getUserOrganizations = cache(async (userId: string) => {
         "GET_USER_ORGANIZATIONS",
         "Error fetching owned organizations",
         ownedError,
-        { userId }
+        { userId },
       );
       throw ownedError;
     }
@@ -364,7 +366,7 @@ export const getUserOrganizations = cache(async (userId: string) => {
         role,
         created_at,
         organization:organizations (*)
-      `
+      `,
       )
       .eq("user_id", profile.id);
 
@@ -373,7 +375,7 @@ export const getUserOrganizations = cache(async (userId: string) => {
         "GET_USER_ORGANIZATIONS",
         "Error fetching member organizations",
         memberError,
-        { userId }
+        { userId },
       );
       throw memberError;
     }
@@ -403,7 +405,7 @@ export const getUserOrganizations = cache(async (userId: string) => {
       {
         userId,
         details: { count: organizations.length },
-      }
+      },
     );
 
     return organizations as Organization[];
@@ -412,7 +414,7 @@ export const getUserOrganizations = cache(async (userId: string) => {
       "GET_USER_ORGANIZATIONS",
       "Unexpected error fetching user organizations",
       error,
-      { userId }
+      { userId },
     );
     throw error;
   }
@@ -423,7 +425,7 @@ export const getUserOrganizations = cache(async (userId: string) => {
  */
 export const setUserActiveOrganization = async (
   userId: string,
-  orgId: string | null
+  orgId: string | null,
 ) => {
   const supabase = await createAdminClient();
 
@@ -445,7 +447,7 @@ export const setUserActiveOrganization = async (
         "SET_ACTIVE_ORGANIZATION",
         "Error fetching profile",
         profileError,
-        { userId }
+        { userId },
       );
       throw profileError;
     }
@@ -466,16 +468,15 @@ export const setUserActiveOrganization = async (
         "SET_ACTIVE_ORGANIZATION",
         "Error updating active organization",
         updateError,
-        { userId, orgId }
+        { userId, orgId },
       );
       throw updateError;
     }
 
-    Logger.info(
-      "SET_ACTIVE_ORGANIZATION",
-      "Active organization updated",
-      { userId, orgId }
-    );
+    Logger.info("SET_ACTIVE_ORGANIZATION", "Active organization updated", {
+      userId,
+      orgId,
+    });
 
     return { org_id: orgId };
   } catch (error) {
@@ -483,7 +484,7 @@ export const setUserActiveOrganization = async (
       "SET_ACTIVE_ORGANIZATION",
       "Unexpected error setting active organization",
       error,
-      { userId, orgId }
+      { userId, orgId },
     );
     throw error;
   }

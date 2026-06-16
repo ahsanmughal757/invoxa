@@ -3,11 +3,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Expense } from "@/types/invoice";
 
-async function getExpensesForOrgAction(userId: string) {
+async function getExpensesForOrgAction(orgId: string) {
   const { getExpensesForOrg } = await import(
     "@/lib/queries/collaboration/expenses"
   );
-  return getExpensesForOrg(userId);
+  return getExpensesForOrg(orgId);
 }
 
 async function createExpenseForOrgAction(
@@ -39,11 +39,11 @@ async function deleteExpenseForOrgAction(id: string, userId: string) {
   return deleteExpenseForOrg(id, userId);
 }
 
-export function useExpensesQuery(userId: string | undefined) {
+export function useExpensesQuery(orgId: string | undefined) {
   return useQuery({
-    queryKey: ["expenses", userId],
-    queryFn: () => getExpensesForOrgAction(userId!),
-    enabled: !!userId,
+    queryKey: ["expenses", orgId],
+    queryFn: () => getExpensesForOrgAction(orgId!),
+    enabled: !!orgId,
     staleTime: 30_000,
   });
 }
@@ -60,7 +60,8 @@ export function useCreateExpenseMutation(orgId: string) {
       userId: string;
     }) => createExpenseForOrgAction(data, orgId, userId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["expenses", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", orgId] });
     },
   });
 }
@@ -79,19 +80,21 @@ export function useUpdateExpenseMutation(orgId: string) {
       userId: string;
     }) => updateExpenseForOrgAction(id, updates, userId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["expenses", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", orgId] });
     },
   });
 }
 
-export function useDeleteExpenseMutation() {
+export function useDeleteExpenseMutation(orgId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, userId }: { id: string; userId: string }) =>
       deleteExpenseForOrgAction(id, userId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["expenses", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", orgId] });
     },
   });
 }

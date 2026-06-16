@@ -11,7 +11,7 @@ import {
 import { getSupabaseUser } from "@/lib/auth";
 import { auth } from "@clerk/nextjs/server";
 import { Logger } from "@/lib/utils/logger";
-import { getOrganizationByOwnerId } from "@/lib/repositories/organizations.repository.func";
+import { getOrganizationsByOwnerId } from "@/lib/repositories/organizations.repository.func";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Invoice } from "@/types/invoice";
 import { generateInvoiceNumber } from "../utils";
@@ -55,7 +55,7 @@ export async function createInvoiceAction(invoiceData: InvoiceData) {
     // Get organization ID from user profile
     let ownerClerkId = userProfile.clerk_user_id;
 
-    const userOrganization = await getOrganizationByOwnerId(ownerClerkId);
+    const userOrganization = await getOrganizationsByOwnerId(ownerClerkId);
 
     if (!userOrganization) {
       return {
@@ -132,7 +132,7 @@ export async function getAllInvoicesAction() {
     // Get organization ID from user profile
     let ownerClerkId = userProfile.clerk_user_id;
 
-    const userOrganization = await getOrganizationByOwnerId(ownerClerkId);
+    const userOrganization = await getOrganizationsByOwnerId(ownerClerkId);
 
     if (!userOrganization) {
       // Return success with empty data for empty state
@@ -201,7 +201,7 @@ export async function getInvoiceByIdAction(invoiceId: string) {
     // Get organization ID from user profile
     let ownerClerkId = userProfile.clerk_user_id;
 
-    const userOrganization = await getOrganizationByOwnerId(ownerClerkId);
+    const userOrganization = await getOrganizationsByOwnerId(ownerClerkId);
 
     if (!userOrganization) {
       // Return success with null data for empty state
@@ -246,7 +246,7 @@ export async function updateInvoiceAction(
     // Get organization ID from user profile
     let ownerClerkId = userProfile.clerk_user_id;
 
-    const userOrganization = await getOrganizationByOwnerId(ownerClerkId);
+    const userOrganization = await getOrganizationsByOwnerId(ownerClerkId);
 
     if (!userOrganization) {
       return {

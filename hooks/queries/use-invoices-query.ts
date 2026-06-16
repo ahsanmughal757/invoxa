@@ -9,24 +9,14 @@ import {
   InvoiceData,
 } from "@/lib/actions/invoice.actions";
 import { Invoice } from "@/types/invoice";
-import { CACHE_TAGS } from "@/lib/cache-tags";
+import { getInvoicesByOrgId } from "@/lib/queries/invoices";
 
 export function useInvoicesQuery(orgId: string | undefined) {
   return useQuery({
     queryKey: ["invoices", orgId],
-    queryFn: () => getAllInvoicesAction(),
+    queryFn: () => getInvoicesByOrgId(orgId!),
     enabled: !!orgId,
     staleTime: 30_000,
-    select: (data) => {
-      if (!data.success || !data.data) return { invoices: [] };
-      return {
-        invoices: data.data.invoices || [],
-        clients: data.data.clients || [],
-        expenses: data.data.expenses || [],
-        payments: data.data.payments || [],
-        organization: data.data.organization,
-      };
-    },
   });
 }
 
@@ -57,6 +47,19 @@ export function useUpdateInvoiceMutation(orgId: string) {
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Invoice> }) =>
       updateInvoiceAction(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", orgId] });
+    },
+  });
+}
+
+export function useDeleteInvoiceMutation(orgId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) =>
+      import("@/lib/services/invoice.service.func").then((m) => m.deleteInvoice(id)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices", orgId] });
       queryClient.invalidateQueries({ queryKey: ["dashboard", orgId] });
