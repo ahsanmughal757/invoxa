@@ -148,7 +148,7 @@ export async function processPayment(paymentData: any): Promise<any> {
 
   // Update the invoice status based on payment status
   await updateInvoice(paymentData.invoice_id, {
-    status: newInvoiceStatus,
+    status: newInvoiceStatus as "draft" | "sent" | "paid" | "overdue" | "void" | "cancelled" | "partially_paid",
     updated_at: new Date().toISOString()
   });
 

@@ -23,8 +23,8 @@ interface InvoiceContextType {
   isError: boolean;
   errorMessage: string | null;
   isReady: boolean;
-  createInvoice: (invoiceData: Partial<Invoice>) => Promise<Invoice>;
-  updateInvoice: (id: string, updates: Partial<Invoice>) => Promise<Invoice | null>;
+  createInvoice: (invoiceData: Partial<Omit<Invoice, "id" | "created_at" | "updated_at" | "org_id">>, orgId: string) => Promise<any>;
+  updateInvoice: (id: string, updates: Partial<Omit<Invoice, "invoice_items">>) => Promise<Invoice | null>;
   deleteInvoice: (id: string) => Promise<void>;
   createTemplate: (templateData: Partial<InvoiceTemplate>) => InvoiceTemplate;
   updateTemplate: (id: string, updates: Partial<InvoiceTemplate>) => void;

@@ -1,4 +1,4 @@
-"use server"
+"use server";
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "./supabase/server";
 

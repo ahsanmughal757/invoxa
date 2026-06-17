@@ -61,7 +61,10 @@ export default function InvoiceCollaborationPage() {
         throw new Error("User not authenticated");
       }
 
-      await createInvoice(invoiceData);
+      if (!organization || !organization.id) {
+        throw new Error("Organization is required to create invoice");
+      }
+      await createInvoice(invoiceData, organization?.id);
       toast.success("Invoice created successfully");
       setIsCreating(false);
     } catch (error: any) {

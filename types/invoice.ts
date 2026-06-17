@@ -40,6 +40,10 @@ export interface Invoice {
   template_id?: string; // Added for template selection
 }
 
+export interface InvoiceStructure extends Invoice {
+  invoice_items: InvoiceItem[];
+}
+
 // Extended invoice interface for data from DB views that includes computed fields
 export interface InvoiceWithComputedFields extends Invoice {
   computed_status?: "draft" | "sent" | "partially_paid" | "paid" | "overdue";

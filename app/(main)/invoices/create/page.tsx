@@ -1,5 +1,6 @@
 "use client";
 
+import toast from "react-hot-toast";
 import { useInvoices } from "@/hooks/use-invoices";
 import { InvoiceForm } from "@/components/invoice/invoice-form";
 import { useUser } from "@clerk/nextjs";
@@ -18,14 +19,23 @@ import { RequiredDataGuard } from "@/components/guards/RequiredDataGuard";
 import { ClientGuard } from "@/components/guards/client-guard";
 import { useClients } from "@/hooks/use-clients";
 import { useOrganization } from "@/hooks/use-organization";
-import { LoadingState, EmptyState, ErrorState, ReadyState } from "@/components/ui/state-components";
+import {
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  ReadyState,
+} from "@/components/ui/state-components";
 
 export default function CreateInvoicePage() {
   const { user, isLoaded } = useUser();
 
   const { createInvoice } = useInvoices();
   const { createClient, clients } = useClients();
-  const { selectedOrganization: organization, isLoading: orgLoading, isReady: orgReady } = useOrganization();
+  const {
+    selectedOrganization: organization,
+    isLoading: orgLoading,
+    isReady: orgReady,
+  } = useOrganization();
 
   const router = useRouter();
   const [previewInvoice, setPreviewInvoice] = useState<Partial<Invoice> | null>(
@@ -62,8 +72,11 @@ export default function CreateInvoicePage() {
         throw new Error("Client ID is required");
       }
 
-      await createInvoice(finalInvoiceData);
-      router.push("/invoices");
+      if (organization && organization.id) {
+        await createInvoice(finalInvoiceData, organization.id);
+        toast.success("Invoice Added");
+        router.push("/invoices");
+      }
     } catch (error) {
       console.error("Failed to save invoice:", error);
       // Show user-friendly error message
@@ -119,7 +132,10 @@ export default function CreateInvoicePage() {
   // Loading State while organization is loading
   if (orgLoading) {
     return (
-      <LoadingState message="Loading your organization information..." size="large" />
+      <LoadingState
+        message="Loading your organization information..."
+        size="large"
+      />
     );
   }
 

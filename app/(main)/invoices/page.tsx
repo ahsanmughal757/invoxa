@@ -23,6 +23,8 @@ import {
 import { useClients } from "@/hooks/use-clients";
 import { useInvoices } from "@/hooks/use-invoices";
 import { useOrganization } from "@/hooks/use-organization";
+import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 
 export default function InvoicesPage() {
   const {
@@ -42,6 +44,9 @@ export default function InvoicesPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [inDeletion, setInDeletion] = useState(false);
+  const [invToDelete, setInvToDelete] = useState<string | null>(null);
 
   const handleCreateInvoice = () => {
     router.push("/invoices/create");
@@ -62,8 +67,24 @@ export default function InvoicesPage() {
   };
 
   const handleDeleteInvoice = (id: string) => {
-    if (confirm("Are you sure you want to delete this invoice?")) {
-      deleteInvoice(id);
+    setDeleteDialogOpen(true);
+    setInvToDelete(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      const id = invToDelete;
+      setInDeletion(true);
+      if (id) await deleteInvoice(id);
+      toast.success("Invoice Deleted");
+      setInDeletion(false);
+      setDeleteDialogOpen(false);
+      setInvToDelete(null);
+    } catch (error) {
+      toast.error("Error Deleting Invoice");
+      setInDeletion(false);
+      setDeleteDialogOpen(false);
+      setInvToDelete(null);
     }
   };
 
@@ -181,6 +202,35 @@ export default function InvoicesPage() {
                   }}
                 />
               )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete Confirmation Dialog */}
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Delete Invoice</DialogTitle>
+              </DialogHeader>
+              <div className="text-base font-normal">
+                Are you sure you want to delete this invoice? This action cant
+                be reversed!
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  variant={"destructive"}
+                  className="mr-4"
+                  onClick={handleConfirmDelete}
+                  disabled={inDeletion ? true : false}
+                >
+                  {inDeletion ? "Deleting..." : "Confirm"}
+                </Button>
+                <Button
+                  variant={"outline"}
+                  onClick={() => setDeleteDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
         </ReadyState>

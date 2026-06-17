@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Invoice, InvoiceItem, Organization, Client } from "@/types/invoice";
+import {
+  Invoice,
+  InvoiceItem,
+  Organization,
+  Client,
+  InvoiceStructure,
+} from "@/types/invoice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,10 +43,12 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { TemplateSelector } from "./templates/template-selector";
 import { TemplateId } from "./templates/template-registry";
+import { usePathname } from "next/navigation";
 
 // Zod schema for invoice item, aligned with DB
 const invoiceItemSchema = z.object({
   id: z.string().optional(),
+  invoice_id: z.string().optional(),
   description: z.string().min(1, { message: "Description is required" }),
   qty: z.number().min(0.01, { message: "Quantity must be positive" }),
   unit_price: z.number().min(0, { message: "Rate must be non-negative" }),
@@ -110,19 +118,22 @@ type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
 interface InvoiceFormProps {
   invoice?: Invoice;
+  editing?: Boolean;
   organization?: Organization | null;
   clients: Client[];
-  onSave: (invoice: Partial<Invoice>, temporaryClient?: any) => Promise<void>;
+  onSave: (invoice: InvoiceStructure, temporaryClient?: any) => Promise<void>;
   onPreview: (invoice: Partial<Invoice>, temporaryClient?: any) => void;
 }
 
 export function InvoiceForm({
   invoice,
+  editing,
   organization,
   clients,
   onSave,
   onPreview,
 }: InvoiceFormProps) {
+  const pathname = usePathname();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isTemporaryClient, setIsTemporaryClient] = useState(false);
@@ -265,7 +276,7 @@ export function InvoiceForm({
 
     const processedItems: InvoiceItem[] = data.invoice_items.map((item) => ({
       id: item.id ?? "",
-      invoice_id: "", // will be set when creating in DB
+      invoice_id: item.invoice_id || "", // will be set when creating in DB
       description: item.description,
       qty: item.qty,
       unit_price: item.unit_price,
@@ -275,7 +286,7 @@ export function InvoiceForm({
     // Create complete invoice data with all required properties for draft
     // Exclude temporary_client as it's not part of the database schema
     const { temporary_client, ...invoiceDataWithoutTempClient } = data;
-    const fullInvoiceData: Partial<Invoice> = {
+    const fullInvoiceData: Partial<InvoiceStructure> = {
       ...invoiceDataWithoutTempClient,
       invoice_items: processedItems,
       subtotal,
@@ -290,7 +301,7 @@ export function InvoiceForm({
       ? data.temporary_client
       : undefined;
 
-    await onSave(fullInvoiceData, temporaryClient);
+    await onSave(fullInvoiceData as InvoiceStructure, temporaryClient);
     setIsSubmitting(false);
   };
   return (
@@ -561,7 +572,7 @@ export function InvoiceForm({
           ) : (
             <Save className="h-4 w-4 mr-2" />
           )}
-          Save Draft
+          {editing ? "Save Edits" : "Save Draft"}
         </Button>
       </div>
     </form>

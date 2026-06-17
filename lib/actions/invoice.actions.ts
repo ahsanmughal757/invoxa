@@ -13,7 +13,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Logger } from "@/lib/utils/logger";
 import { getOrganizationsByOwnerId } from "@/lib/repositories/organizations.repository.func";
 import { createAdminClient } from "@/lib/supabase/server";
-import { Invoice } from "@/types/invoice";
+import { Invoice, InvoiceStructure } from "@/types/invoice";
 import { generateInvoiceNumber } from "../utils";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 
@@ -39,7 +39,10 @@ export interface InvoiceData {
   }>;
 }
 
-export async function createInvoiceAction(invoiceData: InvoiceData) {
+export async function createInvoiceAction(
+  invoiceData: InvoiceData,
+  orgId: string,
+) {
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -53,18 +56,18 @@ export async function createInvoiceAction(invoiceData: InvoiceData) {
     }
 
     // Get organization ID from user profile
-    let ownerClerkId = userProfile.clerk_user_id;
+    // let ownerClerkId = userProfile.clerk_user_id;
 
-    const userOrganization = await getOrganizationsByOwnerId(ownerClerkId);
+    // const userOrganization = await getOrganizationsByOwnerId(ownerClerkId);
 
-    if (!userOrganization) {
+    if (!orgId) {
       return {
         success: false,
         error: "No Organization found associated with the user!",
       };
     }
 
-    const orgId = userOrganization.id as string;
+    // const orgId = userOrganization.id as string;
 
     // Transform the invoice data to match expected format
     // Map 'items' to 'invoice_items' with proper field names
@@ -229,7 +232,8 @@ export async function getInvoiceByIdAction(invoiceId: string) {
 
 export async function updateInvoiceAction(
   invoiceId: string,
-  updates: Partial<Invoice>,
+  updates: InvoiceStructure,
+  orgId: string,
 ) {
   try {
     const { userId } = await auth();
@@ -244,18 +248,18 @@ export async function updateInvoiceAction(
     }
 
     // Get organization ID from user profile
-    let ownerClerkId = userProfile.clerk_user_id;
+    // let ownerClerkId = userProfile.clerk_user_id;
 
-    const userOrganization = await getOrganizationsByOwnerId(ownerClerkId);
+    // const userOrganization = await getOrganizationsByOwnerId(ownerClerkId);
 
-    if (!userOrganization) {
+    if (!orgId) {
       return {
         success: false,
         error: "No Organization found associated with the user!",
       };
     }
 
-    const orgId = userOrganization.id as string;
+    // const orgId = userOrganization.id as string;
 
     // Use the function to update the invoice
     const result = await updateInvoice(invoiceId, updates);

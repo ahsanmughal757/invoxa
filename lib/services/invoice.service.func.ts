@@ -16,7 +16,7 @@ import { getOrganizationById } from "@/lib/repositories/organizations.repository
 import { getPaymentsByInvoiceIds } from "@/lib/repositories/payments.repository.func";
 import { getPersonalExpenses } from "@/lib/repositories/personal/expenses.repository.func";
 import { cache } from "react";
-import { Invoice } from "@/types/invoice";
+import { Invoice, InvoiceStructure } from "@/types/invoice";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Logger } from "../utils/logger";
 
@@ -135,97 +135,102 @@ export async function getInvoiceDashboardData(
 /**
  * Fetches dashboard statistics from the database view
  */
-export const getDashboardStats = cache(async (
-  orgId: string,
-): Promise<DashboardStats> => {
-  const supabase = await createAdminClient();
+export const getDashboardStats = cache(
+  async (orgId: string): Promise<DashboardStats> => {
+    const supabase = await createAdminClient();
 
-  const { data, error } = await supabase
-    .from("v_dashboard_stats")
-    .select("*")
-    .eq("org_id", orgId)
-    .maybeSingle();
+    const { data, error } = await supabase
+      .from("v_dashboard_stats")
+      .select("*")
+      .eq("org_id", orgId)
+      .maybeSingle();
 
-  console.log("Fetched dashboard stats for orgId", orgId, ":", data);
-  if (error) {
-    Logger.error(
-      "FETCH_DASHBOARD_STATS_ERROR",
-      "Error fetching dashboard stats data",
-      { orgId, error },
-    );
-    // If no stats exist yet, return default values
-    // This is an acceptable empty state, not an error
-    return {
-      org_id: orgId,
-      revenue_ytd: 0,
-      outstanding_total: 0,
-      overdue_count: 0,
-      total_invoices: 0,
-      total_invoiced: 0,
-      total_collected: 0,
-      total_outstanding: 0,
-      paid_invoices: 0,
-      outstanding_amount: 0,
-      overdue_invoices: 0,
-      sent_invoices: 0,
-      draft_invoices: 0,
-      cancelled_invoices: 0,
-      void_invoices: 0,
-      partially_paid_invoices: 0,
-    };
-  }
+    console.log("Fetched dashboard stats for orgId", orgId, ":", data);
+    if (error) {
+      Logger.error(
+        "FETCH_DASHBOARD_STATS_ERROR",
+        "Error fetching dashboard stats data",
+        { orgId, error },
+      );
+      // If no stats exist yet, return default values
+      // This is an acceptable empty state, not an error
+      return {
+        org_id: orgId,
+        revenue_ytd: 0,
+        outstanding_total: 0,
+        overdue_count: 0,
+        total_invoices: 0,
+        total_invoiced: 0,
+        total_collected: 0,
+        total_outstanding: 0,
+        paid_invoices: 0,
+        outstanding_amount: 0,
+        overdue_invoices: 0,
+        sent_invoices: 0,
+        draft_invoices: 0,
+        cancelled_invoices: 0,
+        void_invoices: 0,
+        partially_paid_invoices: 0,
+      };
+    }
 
-  Logger.info(
-    "FETCH_DASHBOARD_STATS_SUCCESS",
-    "Successfully fetched dashboard stats data",
-    {
-      orgId,
-      details: {
-        data,
+    Logger.info(
+      "FETCH_DASHBOARD_STATS_SUCCESS",
+      "Successfully fetched dashboard stats data",
+      {
+        orgId,
+        details: {
+          data,
+        },
       },
-    },
-  );
-  // return data as DashboardStats;
-  return data as any;
-});
+    );
+    // return data as DashboardStats;
+    return data as any;
+  },
+);
 
 /**
  * Fetches invoice summary from the database view
  */
-export const getInvoiceSummary = cache(async (
-  orgId: string,
-): Promise<InvoiceSummary[]> => {
-  const supabase = await createAdminClient();
+export const getInvoiceSummary = cache(
+  async (orgId: string): Promise<InvoiceSummary[]> => {
+    const supabase = await createAdminClient();
 
-  if (!orgId) {
-    throw new Error("Organization id is not provided! Something went wrong.");
-  }
-
-  const { data, error } = await supabase
-    .from("v_invoice_summary")
-    .select("*")
-    .eq("org_id", orgId);
-
-  if (error) {
-    // For empty states, return empty array instead of throwing
-    if (error.code === "PGRST116" || error.message.includes("Row not found")) {
-      return []; // Return empty array for empty state instead of throwing error
+    if (!orgId) {
+      throw new Error("Organization id is not provided! Something went wrong.");
     }
-    // Re-throw other errors (auth/validation/system)
-    throw new Error(`Failed to load invoice summary: ${error.message}`);
-  }
 
-  console.log("Fetched invoice summary for orgId", orgId, ":", data);
+    const { data, error } = await supabase
+      .from("v_invoice_summary")
+      .select("*")
+      .eq("org_id", orgId);
 
-  return data as InvoiceSummary[];
-});
+    if (error) {
+      // For empty states, return empty array instead of throwing
+      if (
+        error.code === "PGRST116" ||
+        error.message.includes("Row not found")
+      ) {
+        return []; // Return empty array for empty state instead of throwing error
+      }
+      // Re-throw other errors (auth/validation/system)
+      throw new Error(`Failed to load invoice summary: ${error.message}`);
+    }
+
+    console.log("Fetched invoice summary for orgId", orgId, ":", data);
+
+    return data as InvoiceSummary[];
+  },
+);
 
 /**
  * Fetches a specific invoice with its items
  */
-export const getInvoiceWithItems = cache(async (id: string): Promise<Invoice | null> => {
-  return await getInvoiceByIdWithItems(id);
-});
+export const getInvoiceWithItems = cache(
+  async (id: string): Promise<Invoice | null> => {
+    return await getInvoiceByIdWithItems(id);
+  },
+);
 
 /**
  * Creates a new invoice with associated items using a transactional approach
@@ -251,7 +256,7 @@ export async function createInvoice(invoiceData: any): Promise<any> {
  */
 export async function updateInvoice(
   id: string,
-  updates: any,
+  updates: Partial<InvoiceStructure>,
 ): Promise<Invoice | null> {
   try {
     return await updateInvoiceRepo(id, updates);

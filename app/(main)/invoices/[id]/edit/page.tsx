@@ -1,17 +1,28 @@
-"use client"
+"use client";
 
-import { useInvoiceContext } from '@/context/InvoiceContext';
-import { useOrganization } from '@/hooks/use-organization';
-import { useClients } from '@/hooks/use-clients';
-import { InvoiceForm } from '@/components/invoice/invoice-form';
-import { InvoicePreview } from '@/components/invoice/invoice-preview';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { Invoice, Client } from '@/types/invoice';
-import { useParams } from 'next/navigation';
-import { LoadingState, EmptyState, ErrorState, ReadyState } from '@/components/ui/state-components';
+import { useInvoiceContext } from "@/context/InvoiceContext";
+import { useOrganization } from "@/hooks/use-organization";
+import { useClients } from "@/hooks/use-clients";
+import { InvoiceForm } from "@/components/invoice/invoice-form";
+import { InvoicePreview } from "@/components/invoice/invoice-preview";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { Invoice, Client, InvoiceStructure } from "@/types/invoice";
+import { useParams } from "next/navigation";
+import {
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  ReadyState,
+} from "@/components/ui/state-components";
+import toast from "react-hot-toast";
 
 export default function EditInvoicePage() {
   const { invoices, updateInvoice } = useInvoiceContext();
@@ -21,20 +32,24 @@ export default function EditInvoicePage() {
   const params = useParams();
   const invoiceId = params.id as string;
 
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | undefined>(undefined);
-  const [previewInvoice, setPreviewInvoice] = useState<Partial<Invoice> | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | undefined>(
+    undefined,
+  );
+  const [previewInvoice, setPreviewInvoice] = useState<Partial<Invoice> | null>(
+    null,
+  );
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const findInvoice = () => {
       if (invoiceId) {
-        const foundInvoice = invoices.find(inv => inv.id === invoiceId);
+        const foundInvoice = invoices.find((inv) => inv.id === invoiceId);
         if (foundInvoice) {
           setSelectedInvoice(foundInvoice);
         } else {
           // Handle case where invoice is not found, e.g., redirect to 404 or invoice list
-          router.push('/invoices');
+          router.push("/invoices");
         }
       }
       // Always set loading to false after attempting to find the invoice
@@ -48,25 +63,30 @@ export default function EditInvoicePage() {
       // If invoices are empty but we have an invoiceId, still set loading to false
       // after a short delay to allow for data to potentially load
       const timer = setTimeout(() => {
-        const foundInvoice = invoices.find(inv => inv.id === invoiceId);
+        const foundInvoice = invoices.find((inv) => inv.id === invoiceId);
         if (foundInvoice) {
           setSelectedInvoice(foundInvoice);
         } else {
-          router.push('/invoices');
+          router.push("/invoices");
         }
         setLoading(false);
       }, 100); // Small delay to allow for data to potentially load
-      
+
       return () => clearTimeout(timer);
     } else {
       setLoading(false);
     }
   }, [invoiceId, invoices, router]);
 
-  const handleSaveInvoice = async (invoiceData: Partial<Invoice>) => {
-    if (selectedInvoice) {
-      await updateInvoice(selectedInvoice.id, invoiceData);
-      router.push('/invoices');
+  const handleSaveInvoice = async (invoiceData: InvoiceStructure) => {
+    try {
+      if (selectedInvoice) {
+        await updateInvoice(selectedInvoice.id, invoiceData);
+        toast.success("Invoice Updated");
+        router.push("/invoices");
+      }
+    } catch (error) {
+      toast.error("Error Updating Invoice");
     }
   };
 
@@ -86,7 +106,7 @@ export default function EditInvoicePage() {
         description="The invoice you are trying to edit could not be found."
         action={{
           text: "Back to Invoices",
-          onClick: () => router.push('/invoices'),
+          onClick: () => router.push("/invoices"),
         }}
       />
     );
@@ -95,18 +115,14 @@ export default function EditInvoicePage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Edit Invoice
-        </h1>
-        <Button
-          variant="outline"
-          onClick={() => router.push('/invoices')}
-        >
+        <h1 className="text-3xl font-bold text-gray-900">Edit Invoice</h1>
+        <Button variant="outline" onClick={() => router.push("/invoices")}>
           Back to Invoices
         </Button>
       </div>
       <InvoiceForm
         invoice={selectedInvoice}
+        editing={true}
         organization={organization}
         clients={clients}
         onSave={handleSaveInvoice}
@@ -119,16 +135,23 @@ export default function EditInvoicePage() {
           <DialogHeader>
             <DialogTitle>Invoice Preview</DialogTitle>
           </DialogHeader>
-          {previewInvoice && selectedInvoice && (
+          {previewInvoice &&
+            selectedInvoice &&
             // Find the client for the preview
             (() => {
-              const client = clients.find((c) => c.id === (previewInvoice.client_id || selectedInvoice.client_id));
+              const client = clients.find(
+                (c) =>
+                  c.id ===
+                  (previewInvoice.client_id || selectedInvoice.client_id),
+              );
               return client ? (
                 <InvoicePreview
-                  invoice={{
-                    ...selectedInvoice,
-                    ...previewInvoice
-                  } as Invoice}
+                  invoice={
+                    {
+                      ...selectedInvoice,
+                      ...previewInvoice,
+                    } as Invoice
+                  }
                   client={client}
                   organization={organization}
                   onSend={() => {
@@ -137,8 +160,7 @@ export default function EditInvoicePage() {
                   }}
                 />
               ) : null;
-            })()
-          )}
+            })()}
         </DialogContent>
       </Dialog>
     </div>

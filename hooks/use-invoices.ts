@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Invoice,
   InvoiceItem,
+  InvoiceStructure,
   InvoiceTemplate,
   UserSettings,
 } from "@/types/invoice";
@@ -64,26 +65,43 @@ export function useInvoices() {
   const { selectedOrganization } = useOrganization();
   const orgId = selectedOrganization?.id;
 
-  const { data: invoices = [], isLoading, isError: queryIsError, error: queryError, isFetched } = useInvoicesQuery(orgId);
+  const {
+    data: invoices = [],
+    isLoading,
+    isError: queryIsError,
+    error: queryError,
+    isFetched,
+  } = useInvoicesQuery(orgId);
   const createMutation = useCreateInvoiceMutation(orgId || "");
   const updateMutation = useUpdateInvoiceMutation(orgId || "");
   const deleteMutation = useDeleteInvoiceMutation(orgId || "");
 
-  const [templates, setTemplates] = useState<InvoiceTemplate[]>([defaultTemplate]);
+  const [templates, setTemplates] = useState<InvoiceTemplate[]>([
+    defaultTemplate,
+  ]);
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
   const [memberOrganizations, setMemberOrganizations] = useState<any[]>([]);
 
-  const invoicesArray = Array.isArray(invoices) ? invoices : (invoices as any)?.invoices || [];
-  const invoicesEmpty = !orgId ? true : isFetched && !isLoading && invoicesArray.length === 0;
+  const invoicesArray = Array.isArray(invoices)
+    ? invoices
+    : (invoices as any)?.invoices || [];
+  const invoicesEmpty = !orgId
+    ? true
+    : isFetched && !isLoading && invoicesArray.length === 0;
   const invoicesReady = isFetched && !isLoading && invoicesArray.length > 0;
 
   const createInvoice = async (
-    invoiceData: Partial<Omit<Invoice, "id" | "created_at" | "updated_at" | "org_id">>,
+    invoiceData: Partial<
+      Omit<Invoice, "id" | "created_at" | "updated_at" | "org_id">
+    >,
+    orgId: string,
   ) => {
     if (!userId) throw new Error("User not authorized to create an invoice.");
-    if (!invoiceData.client_id) throw new Error("Client ID is required to create an invoice.");
+    if (!invoiceData.client_id)
+      throw new Error("Client ID is required to create an invoice.");
     const result = await createMutation.mutateAsync(invoiceData as any);
-    if (!result.success || !result.data) throw new Error(result.error || "Failed to create invoice");
+    if (!result.success || !result.data)
+      throw new Error(result.error || "Failed to create invoice");
     return result.data;
   };
 
@@ -91,8 +109,12 @@ export function useInvoices() {
     id: string,
     updates: Partial<Omit<Invoice, "invoice_items">>,
   ) => {
-    const result = await updateMutation.mutateAsync({ id, updates: updates as Partial<Invoice> });
-    if (!result.success) throw new Error(result.error || "Failed to update invoice");
+    const result = await updateMutation.mutateAsync({
+      id,
+      updates: updates as InvoiceStructure,
+    });
+    if (!result.success)
+      throw new Error(result.error || "Failed to update invoice");
     return result.data || null;
   };
 
@@ -100,40 +122,46 @@ export function useInvoices() {
     await deleteMutation.mutateAsync(id);
   };
 
-  const createTemplate = useCallback((templateData: Partial<InvoiceTemplate>) => {
-    const newTemplate: InvoiceTemplate = {
-      id: Date.now().toString(),
-      name: "New Template",
-      isDefault: false,
-      primaryColor: "#000000",
-      secondaryColor: "#666666",
-      fontFamily: "Inter",
-      logoPosition: "right",
-      showLogo: true,
-      showCompanyDetails: true,
-      showClientDetails: true,
-      showInvoiceNumber: true,
-      showDates: true,
-      showNotes: true,
-      showTerms: true,
-      showPaymentInstructions: true,
-      customFields: [],
-      itemsTableStyle: "detailed",
-      headerStyle: "modern",
-      footerStyle: "standard",
-      ...templateData,
-    };
-    setTemplates((prev) => [...prev, newTemplate]);
-    return newTemplate;
-  }, []);
+  const createTemplate = useCallback(
+    (templateData: Partial<InvoiceTemplate>) => {
+      const newTemplate: InvoiceTemplate = {
+        id: Date.now().toString(),
+        name: "New Template",
+        isDefault: false,
+        primaryColor: "#000000",
+        secondaryColor: "#666666",
+        fontFamily: "Inter",
+        logoPosition: "right",
+        showLogo: true,
+        showCompanyDetails: true,
+        showClientDetails: true,
+        showInvoiceNumber: true,
+        showDates: true,
+        showNotes: true,
+        showTerms: true,
+        showPaymentInstructions: true,
+        customFields: [],
+        itemsTableStyle: "detailed",
+        headerStyle: "modern",
+        footerStyle: "standard",
+        ...templateData,
+      };
+      setTemplates((prev) => [...prev, newTemplate]);
+      return newTemplate;
+    },
+    [],
+  );
 
-  const updateTemplate = useCallback((id: string, updates: Partial<InvoiceTemplate>) => {
-    setTemplates((prev) =>
-      prev.map((template) =>
-        template.id === id ? { ...template, ...updates } : template,
-      ),
-    );
-  }, []);
+  const updateTemplate = useCallback(
+    (id: string, updates: Partial<InvoiceTemplate>) => {
+      setTemplates((prev) =>
+        prev.map((template) =>
+          template.id === id ? { ...template, ...updates } : template,
+        ),
+      );
+    },
+    [],
+  );
 
   const deleteTemplate = useCallback((id: string) => {
     setTemplates((prev) => prev.filter((template) => template.id !== id));

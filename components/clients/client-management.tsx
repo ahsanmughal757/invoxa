@@ -186,25 +186,12 @@ export function ClientManagement({
           </DialogContent>
         </Dialog>
 
+        {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          {/*<DialogTrigger asChild>*/}
-          {/*<Button
-              onClick={() => openEditDialog()}
-              className="flex items-center"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-
-            </Button>*/}
-          {/*</DialogTrigger>*/}
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Delete Client</DialogTitle>
             </DialogHeader>
-            {/*<ClientForm
-              client={editingClient}
-              onSave={handleSaveClient}
-              onCancel={() => setDeleteDialogOpen(false)}
-            />*/}
             <div className="text-base font-normal">
               Are you sure you want to delete this client? This action cant be
               reversed!
