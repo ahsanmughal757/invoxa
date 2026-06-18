@@ -260,21 +260,15 @@ export const OrganizationProvider = ({
       throw new Error("User and organization ID are required");
     }
 
-    const result = await handleAsyncOperation(() =>
-      getMembersForOrganizationAction(orgId),
-    );
+    const result = await getMembersForOrganizationAction(orgId);
 
-    if (isError(result)) {
+    if (!result.success) {
       throw new Error(result.error || "Failed to fetch members");
     }
 
-    if (isEmptyState(result) || !result.data) {
-      setMembers([]);
-      return [];
-    }
-
-    setMembers(result.data || []);
-    return result.data;
+    const memberData = Array.isArray(result.data) ? result.data : [];
+    setMembers(memberData);
+    return memberData;
   };
 
   const addMember = async (

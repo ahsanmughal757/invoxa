@@ -23,7 +23,8 @@ import {
   Menu,
   X,
   Activity,
-  OctagonAlert,
+  ChevronDown,
+  LayoutDashboard,
 } from "lucide-react";
 import { Select, SelectTrigger, SelectItem, SelectContent } from "../ui/select";
 import { LicenseBanner } from "@/components/license/license-banner";
@@ -38,6 +39,11 @@ import { SelectValue } from "@radix-ui/react-select";
 import { useSelectedOrganization } from "@/hooks/use-selected-org";
 import { useOrganization } from "@/hooks/use-organization";
 import { set } from "react-hook-form";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@radix-ui/react-collapsible";
 
 export function LayoutContent({ children }: { children: React.ReactNode }) {
   const { settings } = useInvoices();
@@ -54,6 +60,9 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
   const [isSuperuser, setIsSuperuser] = useState(true);
   const [showSuperuserLogin, setShowSuperuserLogin] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collaborationOpen, setCollaborationOpen] = useState(
+    pathname.startsWith("/organization/"),
+  );
   const isSuperUserMode = settings?.isSuperUser || isSuperuser;
 
   useEffect(() => {
@@ -71,14 +80,6 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
       { name: "Members", href: "/members", icon: Users },
       { name: "Settings", href: "/settings", icon: Settings },
     ];
-
-    if (organization) {
-      baseItems.splice(1, 0, {
-        name: "Collaboration",
-        href: `/organization/${organization.id}/collaboration`,
-        icon: Building,
-      });
-    }
 
     return baseItems;
   };
@@ -235,13 +236,103 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
               >
                 <Icon className="h-5 w-5 mr-3" />
                 {item.name}
-
-                {(item.name === "Collaboration" || item.name === "Members") && (
-                  <OctagonAlert className="absolute right-4 h-4 w-4 text-yellow-600" />
-                )}
               </Button>
             );
           })}
+
+          {/* Owner: Expandable Collaboration with sub-items */}
+          {organizations.length > 0 && organization && (() => {
+            const baseHref = `/organization/${organization.id}/collaboration`;
+            return (
+              <Collapsible
+                open={collaborationOpen}
+                onOpenChange={setCollaborationOpen}
+              >
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant={
+                      pathname.startsWith(baseHref) ? "secondary" : "ghost"
+                    }
+                    className={`w-full justify-start pl-8 ${
+                      pathname.startsWith(baseHref)
+                        ? "bg-blue-50 border-l-4 border-blue-500"
+                        : ""
+                    }`}
+                  >
+                    <Building className="h-5 w-5 mr-3" />
+                    Collaboration
+                    <ChevronDown
+                      className={`ml-auto h-4 w-4 transition-transform duration-200 ${
+                        collaborationOpen ? "rotate-0" : "-rotate-90"
+                      }`}
+                    />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-1">
+                  {[
+                    { name: "Dashboard", href: `${baseHref}`, icon: LayoutDashboard },
+                    { name: "Clients", href: `${baseHref}/clients`, icon: Users },
+                    { name: "Invoices", href: `${baseHref}/invoice`, icon: FileText },
+                    { name: "Expenses", href: `${baseHref}/expenses`, icon: Receipt },
+                    { name: "Payments", href: `${baseHref}/payments`, icon: CreditCard },
+                  ].map((sub) => {
+                    const SubIcon = sub.icon;
+                    const isSubActive =
+                      pathname === sub.href ||
+                      pathname.startsWith(sub.href + "/");
+                    return (
+                      <Button
+                        key={sub.name}
+                        variant={isSubActive ? "secondary" : "ghost"}
+                        className={`w-full justify-start pl-12 ${
+                          isSubActive
+                            ? "bg-blue-50 border-l-4 border-blue-500"
+                            : ""
+                        }`}
+                        onClick={() => {
+                          router.push(sub.href);
+                          setSidebarOpen(false);
+                        }}
+                      >
+                        <SubIcon className="h-4 w-4 mr-3" />
+                        {sub.name}
+                      </Button>
+                    );
+                  })}
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })()}
+
+          {/* Member: Single Collaborations link */}
+          {memberOrganizations.length > 0 && (
+            <Button
+              variant={
+                pathname.startsWith("/organization/") && !organizations.some((o: any) => pathname.startsWith(`/organization/${o.id}`))
+                  ? "secondary"
+                  : "ghost"
+              }
+              className={`w-full justify-start pl-8 ${
+                pathname.startsWith("/organization/") && !organizations.some((o: any) => pathname.startsWith(`/organization/${o.id}`))
+                  ? "bg-blue-50 border-l-4 border-blue-500"
+                  : ""
+              }`}
+              onClick={() => {
+                const firstOrgId =
+                  memberOrganizations[0]?.org_id ||
+                  memberOrganizations[0]?.organization?.id;
+                if (firstOrgId) {
+                  router.push(
+                    `/organization/${firstOrgId}/collaboration`,
+                  );
+                }
+                setSidebarOpen(false);
+              }}
+            >
+              <Building className="h-5 w-5 mr-3" />
+              Collaborations
+            </Button>
+          )}
         </div>
 
         {/* Overview Category */}
