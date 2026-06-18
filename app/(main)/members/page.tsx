@@ -20,6 +20,7 @@ import {
   Search,
   Filter,
   TriangleAlert,
+  ArrowUpRight,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -49,8 +50,11 @@ export default function MembersManagementPage() {
   //   isError: hookError,
   //   errorMessage: hookErrorMessage,
   // } = useInvoices();
-  const { selectedOrganization: organization, memberOrganizations, isEmpty: orgIsEmpty } =
-    useOrganization();
+  const {
+    selectedOrganization: organization,
+    memberOrganizations,
+    isEmpty: orgIsEmpty,
+  } = useOrganization();
 
   const router = useRouter();
   const { userId } = useAuth();
@@ -260,6 +264,12 @@ export default function MembersManagementPage() {
           <p className="text-gray-600 mt-1">
             Track activities performed by organization members
           </p>
+        </div>
+
+        <div className="flex justify-end">
+          <Button onClick={() => router.push("members/manage")}>
+            Manage Members <ArrowUpRight className="h-4 w-4 ml-2" />
+          </Button>
         </div>
 
         {/* Stats Overview */}

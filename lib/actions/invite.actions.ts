@@ -286,7 +286,9 @@ export async function createInviteAction(
         "CREATE_INVITE_ACTION",
         "No user found with the provided email",
       );
-      throw new Error("No user found with the provided email");
+      throw new Error(
+        "No user exists with the provided email. Make sure they have an account.",
+      );
     }
 
     // Verify that the user belongs to the organization
@@ -488,8 +490,8 @@ export async function getOrganizationInvitesAction(organizationId: string) {
         user:profiles(*)
       `,
       )
-      .eq("org_id", organizationId)
-    
+      .eq("org_id", organizationId);
+
     if (membersError) {
       Logger.error(
         "GET_ORGANIZATION_INVITES_ACTION",
@@ -504,7 +506,6 @@ export async function getOrganizationInvitesAction(organizationId: string) {
       invites,
       joinedUsersFromInvites: joinedUsers,
     });
-    
 
     return {
       success: true,

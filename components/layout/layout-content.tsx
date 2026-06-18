@@ -406,7 +406,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
         ))}
 
         {/* Admin Section */}
-        {isSuperUserMode && (
+        {/*{isSuperUserMode && (
           <div className="mb-4">
             <h3 className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
               Admin
@@ -423,7 +423,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
               Admin
             </Button>
           </div>
-        )}
+        )}*/}
       </nav>
     </div>
   );
@@ -458,7 +458,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
               <UserButton />
             </SignedIn>
 
-            {isSuperUserMode && (
+            {/*{isSuperUserMode && (
               <Button
                 variant={pathname.startsWith("/admin") ? "default" : "ghost"}
                 onClick={() => router.push("/admin")}
@@ -467,7 +467,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
                 <Shield className="h-4 w-4 mr-2" />
                 Admin
               </Button>
-            )}
+            )}*/}
             {/* <Button
               variant={pathname.startsWith("/settings") ? "default" : "ghost"}
               onClick={() => router.push("/settings")}
@@ -476,7 +476,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
               <Settings className="h-4 w-4 mr-2" />
               Settings
             </Button> */}
-            {!isSuperUserMode && (
+            {/*{!isSuperUserMode && (
               <Button
                 variant="ghost"
                 onClick={() => setShowSuperuserLogin(true)}
@@ -485,7 +485,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
                 <Shield className="h-3 w-3 mr-1" />
                 Admin
               </Button>
-            )}
+            )}*/}
           </div>
         </div>
       </div>
@@ -532,7 +532,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      <SuperuserLogin
+      {/*<SuperuserLogin
         isOpen={showSuperuserLogin}
         onClose={() => setShowSuperuserLogin(false)}
         onLogin={(success) => {
@@ -541,7 +541,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
             router.push("/admin");
           }
         }}
-      />
+      />*/}
     </div>
   );
 }
