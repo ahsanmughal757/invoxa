@@ -175,99 +175,107 @@ export const OrganizationProvider = ({
     }
   }
 
-  const createOrganization = async (
-    orgData: Partial<Omit<Organization, "id">>,
-  ) => {
-    // console.log("orgId: ", orgId);
-    console.log("orgData---------:> ", orgData);
-    // Ensure required fields are present
-    const validatedOrgData: OrganizationData = {
-      name: "name" in orgData && orgData.name ? (orgData.name as string) : "",
-      email:
-        "email" in orgData && orgData.email ? (orgData.email as string) : "",
-      phone: "phone" in orgData ? (orgData.phone as string) : undefined,
-      address: "address" in orgData ? (orgData.address as string) : undefined,
-      city: "city" in orgData ? (orgData.city as string) : undefined,
-      state: "state" in orgData ? (orgData.state as string) : undefined,
-      zip_code:
-        "zip_code" in orgData ? (orgData.zip_code as string) : undefined,
-      country: "country" in orgData ? (orgData.country as string) : undefined,
-      tax_id: "tax_id" in orgData ? (orgData.tax_id as string) : undefined,
-      logo_url:
-        "logo_url" in orgData ? (orgData.logo_url as string) : undefined,
-      branding: "branding" in orgData ? (orgData.branding as any) : undefined,
-    };
+  const createOrganization = useCallback(
+    async (orgData: Partial<Omit<Organization, "id">>) => {
+      // console.log("orgId: ", orgId);
+      console.log("orgData---------:> ", orgData);
+      // Ensure required fields are present
+      const validatedOrgData: OrganizationData = {
+        name: "name" in orgData && orgData.name ? (orgData.name as string) : "",
+        email:
+          "email" in orgData && orgData.email ? (orgData.email as string) : "",
+        phone: "phone" in orgData ? (orgData.phone as string) : undefined,
+        address: "address" in orgData ? (orgData.address as string) : undefined,
+        city: "city" in orgData ? (orgData.city as string) : undefined,
+        state: "state" in orgData ? (orgData.state as string) : undefined,
+        zip_code:
+          "zip_code" in orgData ? (orgData.zip_code as string) : undefined,
+        country: "country" in orgData ? (orgData.country as string) : undefined,
+        tax_id: "tax_id" in orgData ? (orgData.tax_id as string) : undefined,
+        logo_url:
+          "logo_url" in orgData ? (orgData.logo_url as string) : undefined,
+        branding: "branding" in orgData ? (orgData.branding as any) : undefined,
+      };
 
-    const result = await handleAsyncOperation(() =>
-      createOrganizationAction(validatedOrgData),
-    );
+      const result = await handleAsyncOperation(() =>
+        createOrganizationAction(validatedOrgData),
+      );
 
-    if (isError(result)) {
-      throw new Error(result.error || "Failed to create organization");
-    }
+      if (isError(result)) {
+        throw new Error(result.error || "Failed to create organization");
+      }
 
-    if (isEmptyState(result) || !result.data) {
-      throw new Error("Organization creation failed - no data returned");
-    }
+      if (isEmptyState(result) || !result.data) {
+        throw new Error("Organization creation failed - no data returned");
+      }
 
-    if (result.data) {
-      setSelectedOrganization(result.data as Organization);
-    }
+      if (result.data) {
+        setSelectedOrganization(result.data as Organization);
+      }
 
-    return result.data;
-  };
+      return result.data;
+    },
+    [],
+  );
 
   // Organization operations
-  const updateOrganization = async (orgData: Partial<Organization>) => {
-    if (!orgId) throw new Error("Organization ID not found");
+  const updateOrganization = useCallback(
+    async (orgData: Partial<Organization>) => {
+      if (!userId) throw new Error("Not Authorized");
+      if (!orgId) throw new Error("Organization ID not found");
 
-    const result = await handleAsyncOperation(() =>
-      updateOrganizationAction(orgId, orgData),
-    );
-
-    if (isError(result)) {
-      throw new Error(result.error || "Failed to update organization");
-    }
-
-    if (isEmptyState(result) || !result.data) {
-      // For empty state, we might want to handle differently
-      // In this case, we'll return null to indicate no organization was found
-      setSelectedOrganization(null);
-      return null;
-    }
-
-    if (result.data) {
-      setSelectedOrganization(result.data as Organization);
-    }
-    return result.data as Organization;
-  };
-
-  const switchOrganization = async (orgId: string | null) => {
-    if (!userId) {
-      throw new Error("User not authenticated");
-    }
-
-    const result = await handleAsyncOperation(() =>
-      switchActiveOrganizationAction(orgId),
-    );
-
-    if (isError(result)) {
-      throw new Error(result.error || "Failed to switch organization");
-    }
-
-    if (result.data) {
-      // setActiveOrganizationId(orgId);
-      // Reload organization data after switching
-      const orgResult = await handleAsyncOperation(() =>
-        getOrganizationAction(),
+      const result = await handleAsyncOperation(() =>
+        updateOrganizationAction(orgId, orgData),
       );
-      if (!isError(orgResult) && orgResult.data) {
-        setSelectedOrganization(orgResult.data || null);
-      }
-    }
 
-    return result.data;
-  };
+      if (isError(result)) {
+        throw new Error(result.error || "Failed to update organization");
+      }
+
+      if (isEmptyState(result) || !result.data) {
+        // For empty state, we might want to handle differently
+        // In this case, we'll return null to indicate no organization was found
+        setSelectedOrganization(null);
+        return null;
+      }
+
+      if (result.data) {
+        setSelectedOrganization(result.data as Organization);
+      }
+      return result.data as Organization;
+    },
+    [userId, orgId],
+  );
+
+  const switchOrganization = useCallback(
+    async (orgId: string | null) => {
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
+
+      const result = await handleAsyncOperation(() =>
+        switchActiveOrganizationAction(orgId),
+      );
+
+      if (isError(result)) {
+        throw new Error(result.error || "Failed to switch organization");
+      }
+
+      if (result.data) {
+        // setActiveOrganizationId(orgId);
+        // Reload organization data after switching
+        const orgResult = await handleAsyncOperation(() =>
+          getOrganizationAction(),
+        );
+        if (!isError(orgResult) && orgResult.data) {
+          setSelectedOrganization(orgResult.data || null);
+        }
+      }
+
+      return result.data;
+    },
+    [userId],
+  );
 
   // Member management operations
   const getMembers = useCallback(
@@ -289,141 +297,159 @@ export const OrganizationProvider = ({
     [userId],
   );
 
-  const addMember = async (
-    orgId: string,
-    targetUserId: string,
-    role: "owner" | "admin" | "member" = "member",
-  ) => {
-    if (!userId || !orgId) {
-      throw new Error("User and organization ID are required");
-    }
+  const addMember = useCallback(
+    async (
+      orgId: string,
+      targetUserId: string,
+      role: "owner" | "admin" | "member" = "member",
+    ) => {
+      if (!userId || !orgId) {
+        throw new Error("User and organization ID are required");
+      }
 
-    const result = await handleAsyncOperation(() =>
-      addMemberAction(orgId, targetUserId, role),
-    );
+      const result = await handleAsyncOperation(() =>
+        addMemberAction(orgId, targetUserId, role),
+      );
 
-    if (isError(result)) {
-      throw new Error(result.error || "Failed to add member");
-    }
+      if (isError(result)) {
+        throw new Error(result.error || "Failed to add member");
+      }
 
-    if (result.data) {
-      // Refresh members list
-      await getMembers(orgId);
-    }
+      if (result.data) {
+        // Refresh members list
+        await getMembers(orgId);
+      }
 
-    return result.data;
-  };
+      return result.data;
+    },
+    [userId, getMembers],
+  );
 
-  const removeMember = async (orgId: string, targetUserId: string) => {
-    if (!userId || !orgId) {
-      throw new Error("User and organization ID are required");
-    }
+  const removeMember = useCallback(
+    async (orgId: string, targetUserId: string) => {
+      if (!userId || !orgId) {
+        throw new Error("User and organization ID are required");
+      }
 
-    const result = await handleAsyncOperation(() =>
-      removeMemberAction(orgId, targetUserId),
-    );
+      const result = await handleAsyncOperation(() =>
+        removeMemberAction(orgId, targetUserId),
+      );
 
-    if (isError(result)) {
-      throw new Error(result.error || "Failed to remove member");
-    }
+      if (isError(result)) {
+        throw new Error(result.error || "Failed to remove member");
+      }
 
-    if (result.data) {
-      // Refresh members list
-      await getMembers(orgId);
-    }
+      if (result.data) {
+        // Refresh members list
+        await getMembers(orgId);
+      }
 
-    return result.data;
-  };
+      return result.data;
+    },
+    [userId, getMembers],
+  );
 
-  const updateMemberRole = async (
-    orgId: string,
-    targetUserId: string,
-    newRole: "owner" | "admin" | "member",
-  ) => {
-    if (!userId || !orgId) {
-      throw new Error("User and organization ID are required");
-    }
+  const updateMemberRole = useCallback(
+    async (
+      orgId: string,
+      targetUserId: string,
+      newRole: "owner" | "admin" | "member",
+    ) => {
+      if (!userId || !orgId) {
+        throw new Error("User and organization ID are required");
+      }
 
-    const result = await handleAsyncOperation(() =>
-      updateMemberRoleAction(orgId, targetUserId, newRole),
-    );
+      const result = await handleAsyncOperation(() =>
+        updateMemberRoleAction(orgId, targetUserId, newRole),
+      );
 
-    if (isError(result)) {
-      throw new Error(result.error || "Failed to update member role");
-    }
+      if (isError(result)) {
+        throw new Error(result.error || "Failed to update member role");
+      }
 
-    if (result.data) {
-      // Refresh members list
-      await getMembers(orgId);
-    }
+      if (result.data) {
+        // Refresh members list
+        await getMembers(orgId);
+      }
 
-    return result.data;
-  };
+      return result.data;
+    },
+    [userId, getMembers],
+  );
 
-  const leaveOrganization = async (orgId: string) => {
-    if (!userId || !orgId) {
-      throw new Error("User and organization ID are required");
-    }
+  const leaveOrganization = useCallback(
+    async (orgId: string) => {
+      if (!userId || !orgId) {
+        throw new Error("User and organization ID are required");
+      }
 
-    const result = await handleAsyncOperation(() =>
-      leaveOrganizationAction(orgId),
-    );
+      const result = await handleAsyncOperation(() =>
+        leaveOrganizationAction(orgId),
+      );
 
-    if (isError(result)) {
-      throw new Error(result.error || "Failed to leave organization");
-    }
+      if (isError(result)) {
+        throw new Error(result.error || "Failed to leave organization");
+      }
 
-    if (result.data) {
-      // Refresh organizations list
-      await getOrganizations();
-    }
+      if (result.data) {
+        // Refresh organizations list
+        await getOrganizations();
+      }
 
-    return result.data;
-  };
+      return result.data;
+    },
+    [userId],
+  );
 
-  const transferOwnership = async (orgId: string, newOwnerId: string) => {
-    if (!userId || !orgId) {
-      throw new Error("User and organization ID are required");
-    }
+  const transferOwnership = useCallback(
+    async (orgId: string, newOwnerId: string) => {
+      if (!userId || !orgId) {
+        throw new Error("User and organization ID are required");
+      }
 
-    const result = await handleAsyncOperation(() =>
-      transferOwnershipAction(orgId, newOwnerId),
-    );
+      const result = await handleAsyncOperation(() =>
+        transferOwnershipAction(orgId, newOwnerId),
+      );
 
-    if (isError(result)) {
-      throw new Error(result.error || "Failed to transfer ownership");
-    }
+      if (isError(result)) {
+        throw new Error(result.error || "Failed to transfer ownership");
+      }
 
-    if (result.data) {
-      // Refresh organizations and members lists
-      await getOrganizations();
-      await getMembers(orgId);
-    }
+      if (result.data) {
+        // Refresh organizations and members lists
+        await getOrganizations();
+        await getMembers(orgId);
+      }
 
-    return result.data;
-  };
+      return result.data;
+    },
+    [userId, getMembers],
+  );
 
-  const deleteOrganization = async (orgId: string) => {
-    if (!orgId || !userId) {
-      throw new Error("User and organization ID are required");
-    }
+  const deleteOrganization = useCallback(
+    async (orgId: string) => {
+      if (!orgId || !userId) {
+        throw new Error("User and organization ID are required");
+      }
 
-    const result = await handleAsyncOperation(() =>
-      deleteOrganizationAction(orgId),
-    );
+      const result = await handleAsyncOperation(() =>
+        deleteOrganizationAction(orgId),
+      );
 
-    if (isError(result)) {
-      throw new Error(result.error || "Error deleting the organization");
-    }
+      if (isError(result)) {
+        throw new Error(result.error || "Error deleting the organization");
+      }
 
-    if (result.data) {
-      // Refresh organizations and members lists
-      await getOrganizations();
-      await getMembers(orgId);
-    }
+      if (result.data) {
+        // Refresh organizations and members lists
+        await getOrganizations();
+        await getMembers(orgId);
+      }
 
-    return result.data;
-  };
+      return result.data;
+    },
+    [userId, getMembers],
+  );
 
   const contextValue = useMemo(
     () => ({
