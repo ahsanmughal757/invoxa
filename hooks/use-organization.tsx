@@ -12,7 +12,7 @@ import {
   Organization,
   OrganizationMember,
 } from "@/types/invoice";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useSelectedOrganization } from "./use-selected-org";
 import toast from "react-hot-toast";
 import { useAuth } from "@clerk/nextjs";
@@ -255,7 +255,7 @@ export const OrganizationProvider = ({
   };
 
   // Member management operations
-  const getMembers = async (orgId: string) => {
+  const getMembers = useCallback(async (orgId: string) => {
     if (!userId || !orgId) {
       throw new Error("User and organization ID are required");
     }
@@ -269,7 +269,7 @@ export const OrganizationProvider = ({
     const memberData = Array.isArray(result.data) ? result.data : [];
     setMembers(memberData);
     return memberData;
-  };
+  }, [userId]);
 
   const addMember = async (
     orgId: string,
@@ -407,34 +407,54 @@ export const OrganizationProvider = ({
     return result.data;
   };
 
+  const contextValue = useMemo(() => ({
+    organizations,
+    memberOrganizations,
+    setMemberOrganizations,
+    selectedOrganization,
+    setSelectedOrganization,
+    members,
+    setOrganizations,
+    setMembers,
+    isLoading,
+    isEmpty,
+    isError: hasError,
+    errorMessage,
+    isReady,
+    getMembers,
+    addMember,
+    removeMember,
+    updateMemberRole,
+    leaveOrganization,
+    transferOwnership,
+    switchOrganization,
+    createOrganization,
+    updateOrganization,
+    deleteOrganization,
+  }), [
+    organizations,
+    memberOrganizations,
+    selectedOrganization,
+    members,
+    isLoading,
+    isEmpty,
+    hasError,
+    errorMessage,
+    isReady,
+    getMembers,
+    addMember,
+    removeMember,
+    updateMemberRole,
+    leaveOrganization,
+    transferOwnership,
+    switchOrganization,
+    createOrganization,
+    updateOrganization,
+    deleteOrganization,
+  ]);
+
   return (
-    <OrganizationContext.Provider
-      value={{
-        organizations,
-        memberOrganizations,
-        setMemberOrganizations,
-        selectedOrganization,
-        setSelectedOrganization,
-        members,
-        setOrganizations,
-        setMembers,
-        isLoading,
-        isEmpty,
-        isError: hasError,
-        errorMessage,
-        isReady,
-        getMembers,
-        addMember,
-        removeMember,
-        updateMemberRole,
-        leaveOrganization,
-        transferOwnership,
-        switchOrganization,
-        createOrganization,
-        updateOrganization,
-        deleteOrganization,
-      }}
-    >
+    <OrganizationContext.Provider value={contextValue}>
       {children}
     </OrganizationContext.Provider>
   );
