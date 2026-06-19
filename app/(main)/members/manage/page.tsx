@@ -97,10 +97,8 @@ export default function MembersManagementPage() {
 
     setLoading(true);
     try {
-      const result = await getMembers(organization.id);
-
-      console.log("members: ", result);
-      setMembers(result.data || []);
+      const mems = await getMembers(organization.id);
+      setMembers(mems || []);
     } catch (error) {
       console.error("Failed to load members:", error);
       toast.error("Failed to load members");

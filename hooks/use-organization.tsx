@@ -12,7 +12,14 @@ import {
   Organization,
   OrganizationMember,
 } from "@/types/invoice";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useSelectedOrganization } from "./use-selected-org";
 import toast from "react-hot-toast";
 import { useAuth } from "@clerk/nextjs";
@@ -121,7 +128,11 @@ export const OrganizationProvider = ({
           const userMemberOrganizationData =
             await getMemberAssociatedOrganization(userId);
 
-          if (userMemberOrganizationData && userMemberOrganizationData.length > 0) {
+          debugger;
+          if (
+            userMemberOrganizationData &&
+            userMemberOrganizationData.length > 0
+          ) {
             setMemberOrganizations(userMemberOrganizationData);
             setIsLoading(false);
             setIsEmpty(false);
@@ -141,7 +152,11 @@ export const OrganizationProvider = ({
         setIsLoading(false);
         setIsEmpty(false);
         setHasError(true);
-        setErrorMessage(error instanceof Error ? error.message : "Failed to load organizations");
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Failed to load organizations",
+        );
         setIsReady(false);
       }
     })();
@@ -255,21 +270,24 @@ export const OrganizationProvider = ({
   };
 
   // Member management operations
-  const getMembers = useCallback(async (orgId: string) => {
-    if (!userId || !orgId) {
-      throw new Error("User and organization ID are required");
-    }
+  const getMembers = useCallback(
+    async (orgId: string) => {
+      if (!userId || !orgId) {
+        throw new Error("User and organization ID are required");
+      }
 
-    const result = await getMembersForOrganizationAction(orgId);
+      const result = await getMembersForOrganizationAction(orgId);
 
-    if (!result.success) {
-      throw new Error(result.error || "Failed to fetch members");
-    }
+      if (!result.success) {
+        throw new Error(result.error || "Failed to fetch members");
+      }
 
-    const memberData = Array.isArray(result.data) ? result.data : [];
-    setMembers(memberData);
-    return memberData;
-  }, [userId]);
+      const memberData = Array.isArray(result.data) ? result.data : [];
+      setMembers(memberData);
+      return memberData;
+    },
+    [userId],
+  );
 
   const addMember = async (
     orgId: string,
@@ -407,51 +425,54 @@ export const OrganizationProvider = ({
     return result.data;
   };
 
-  const contextValue = useMemo(() => ({
-    organizations,
-    memberOrganizations,
-    setMemberOrganizations,
-    selectedOrganization,
-    setSelectedOrganization,
-    members,
-    setOrganizations,
-    setMembers,
-    isLoading,
-    isEmpty,
-    isError: hasError,
-    errorMessage,
-    isReady,
-    getMembers,
-    addMember,
-    removeMember,
-    updateMemberRole,
-    leaveOrganization,
-    transferOwnership,
-    switchOrganization,
-    createOrganization,
-    updateOrganization,
-    deleteOrganization,
-  }), [
-    organizations,
-    memberOrganizations,
-    selectedOrganization,
-    members,
-    isLoading,
-    isEmpty,
-    hasError,
-    errorMessage,
-    isReady,
-    getMembers,
-    addMember,
-    removeMember,
-    updateMemberRole,
-    leaveOrganization,
-    transferOwnership,
-    switchOrganization,
-    createOrganization,
-    updateOrganization,
-    deleteOrganization,
-  ]);
+  const contextValue = useMemo(
+    () => ({
+      organizations,
+      memberOrganizations,
+      setMemberOrganizations,
+      selectedOrganization,
+      setSelectedOrganization,
+      members,
+      setOrganizations,
+      setMembers,
+      isLoading,
+      isEmpty,
+      isError: hasError,
+      errorMessage,
+      isReady,
+      getMembers,
+      addMember,
+      removeMember,
+      updateMemberRole,
+      leaveOrganization,
+      transferOwnership,
+      switchOrganization,
+      createOrganization,
+      updateOrganization,
+      deleteOrganization,
+    }),
+    [
+      organizations,
+      memberOrganizations,
+      selectedOrganization,
+      members,
+      isLoading,
+      isEmpty,
+      hasError,
+      errorMessage,
+      isReady,
+      getMembers,
+      addMember,
+      removeMember,
+      updateMemberRole,
+      leaveOrganization,
+      transferOwnership,
+      switchOrganization,
+      createOrganization,
+      updateOrganization,
+      deleteOrganization,
+    ],
+  );
 
   return (
     <OrganizationContext.Provider value={contextValue}>
