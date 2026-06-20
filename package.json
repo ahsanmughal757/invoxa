@@ -11,6 +11,9 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },
+  "engines": {
+    "node": ">=18.18.0"
+  },
   "dependencies": {
     "@clerk/nextjs": "^6.30.0",
     "@hookform/resolvers": "^3.9.0",
