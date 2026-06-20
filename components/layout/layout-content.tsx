@@ -655,12 +655,12 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
                   </h2>
 
                   {organization.userRole === "owner" ? (
-                    <span className="bg-red-200 py-1 px-2 rounded-lg flex items-center mr-2">
+                    <span className="bg-red-200 py-1 px-2 rounded-lg flex items-center mr-2 font-md">
                       <Crown className="h-4 w-4 mr-2" />
                       Owner
                     </span>
                   ) : (
-                    <span className="bg-yellow-200 py-1 px-2 rounded-lg flex items-center mr-2">
+                    <span className="bg-yellow-200 py-1 px-2 rounded-lg flex items-center mr-2 font-md">
                       <Crown className="h-4 w-4 mr-2" />
                       Member
                     </span>
