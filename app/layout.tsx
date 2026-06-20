@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter, Lexend } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { QueryProvider } from "@/providers/query-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const inter = Inter({ subsets: ["latin"], weight: ["300", "500", "700"] });
 const lexend = Lexend({ subsets: ["latin"], weight: ["300", "500", "700"] });
@@ -24,7 +25,9 @@ export default function RootLayout({
     >
       <html lang="en">
         <body className={lexend.className}>
-          <QueryProvider>{children}</QueryProvider>
+          <TooltipProvider>
+            <QueryProvider>{children}</QueryProvider>
+          </TooltipProvider>
         </body>
       </html>
     </ClerkProvider>

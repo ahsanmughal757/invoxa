@@ -25,6 +25,8 @@ import {
   Activity,
   ChevronDown,
   LayoutDashboard,
+  Crown,
+  CircleAlert,
 } from "lucide-react";
 import { Select, SelectTrigger, SelectItem, SelectContent } from "../ui/select";
 import { LicenseBanner } from "@/components/license/license-banner";
@@ -44,6 +46,8 @@ import {
   CollapsibleTrigger,
   CollapsibleContent,
 } from "@radix-ui/react-collapsible";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { TooltipArrow, TooltipPortal } from "@radix-ui/react-tooltip";
 
 export function LayoutContent({ children }: { children: React.ReactNode }) {
   const { settings } = useInvoices();
@@ -205,6 +209,19 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
                         (Current)
                       </span>
                     )}
+
+                    {org.userRole === "owner" && (
+                      <span className="flex bg-red-300 px-2 py-1 ml-2 rounded-md">
+                        <Crown className="h-3 w-3 mr-2" />
+                        Owner
+                      </span>
+                    )}
+                    {org.userRole === "member" && (
+                      <span className="flex bg-yellow-300 px-2 py-1 ml-2 rounded-md">
+                        <Users className="h-3 w-3 mr-2" />
+                        Member
+                      </span>
+                    )}
                   </div>
                 </SelectItem>
               ))}
@@ -241,79 +258,107 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
           })}
 
           {/* Owner: Expandable Collaboration with sub-items */}
-          {organizations.length > 0 && organization && (() => {
-            const baseHref = `/organization/${organization.id}/collaboration`;
-            return (
-              <Collapsible
-                open={collaborationOpen}
-                onOpenChange={setCollaborationOpen}
-              >
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant={
-                      pathname.startsWith(baseHref) ? "secondary" : "ghost"
-                    }
-                    className={`w-full justify-start pl-8 ${
-                      pathname.startsWith(baseHref)
-                        ? "bg-blue-50 border-l-4 border-blue-500"
-                        : ""
-                    }`}
-                  >
-                    <Building className="h-5 w-5 mr-3" />
-                    Collaboration
-                    <ChevronDown
-                      className={`ml-auto h-4 w-4 transition-transform duration-200 ${
-                        collaborationOpen ? "rotate-0" : "-rotate-90"
+          {organizations.length > 0 &&
+            organization &&
+            (() => {
+              const baseHref = `/organization/${organization.id}/collaboration`;
+              return (
+                <Collapsible
+                  open={collaborationOpen}
+                  onOpenChange={setCollaborationOpen}
+                >
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant={
+                        pathname.startsWith(baseHref) ? "secondary" : "ghost"
+                      }
+                      className={`w-full justify-start pl-8 ${
+                        pathname.startsWith(baseHref)
+                          ? "bg-blue-50 border-l-4 border-blue-500"
+                          : ""
                       }`}
-                    />
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-1">
-                  {[
-                    { name: "Dashboard", href: `${baseHref}`, icon: LayoutDashboard },
-                    { name: "Clients", href: `${baseHref}/clients`, icon: Users },
-                    { name: "Invoices", href: `${baseHref}/invoice`, icon: FileText },
-                    { name: "Expenses", href: `${baseHref}/expenses`, icon: Receipt },
-                    { name: "Payments", href: `${baseHref}/payments`, icon: CreditCard },
-                  ].map((sub) => {
-                    const SubIcon = sub.icon;
-                    const isSubActive =
-                      pathname === sub.href ||
-                      pathname.startsWith(sub.href + "/");
-                    return (
-                      <Button
-                        key={sub.name}
-                        variant={isSubActive ? "secondary" : "ghost"}
-                        className={`w-full justify-start pl-12 ${
-                          isSubActive
-                            ? "bg-blue-50 border-l-4 border-blue-500"
-                            : ""
+                    >
+                      <Building className="h-5 w-5 mr-3" />
+                      Collaboration
+                      <ChevronDown
+                        className={`ml-auto h-4 w-4 transition-transform duration-200 ${
+                          collaborationOpen ? "rotate-0" : "-rotate-90"
                         }`}
-                        onClick={() => {
-                          router.push(sub.href);
-                          setSidebarOpen(false);
-                        }}
-                      >
-                        <SubIcon className="h-4 w-4 mr-3" />
-                        {sub.name}
-                      </Button>
-                    );
-                  })}
-                </CollapsibleContent>
-              </Collapsible>
-            );
-          })()}
+                      />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-1">
+                    {[
+                      {
+                        name: "Dashboard",
+                        href: `${baseHref}`,
+                        icon: LayoutDashboard,
+                      },
+                      {
+                        name: "Clients",
+                        href: `${baseHref}/clients`,
+                        icon: Users,
+                      },
+                      {
+                        name: "Invoices",
+                        href: `${baseHref}/invoice`,
+                        icon: FileText,
+                      },
+                      {
+                        name: "Expenses",
+                        href: `${baseHref}/expenses`,
+                        icon: Receipt,
+                      },
+                      {
+                        name: "Payments",
+                        href: `${baseHref}/payments`,
+                        icon: CreditCard,
+                      },
+                    ].map((sub) => {
+                      const SubIcon = sub.icon;
+                      const isSubActive =
+                        pathname === sub.href ||
+                        pathname.startsWith(sub.href + "/");
+                      return (
+                        <Button
+                          key={sub.name}
+                          variant={isSubActive ? "secondary" : "ghost"}
+                          className={`w-full justify-start pl-12 ${
+                            isSubActive
+                              ? "bg-blue-50 border-l-4 border-blue-500"
+                              : ""
+                          }`}
+                          onClick={() => {
+                            router.push(sub.href);
+                            setSidebarOpen(false);
+                          }}
+                        >
+                          <SubIcon className="h-4 w-4 mr-3" />
+                          {sub.name}
+                        </Button>
+                      );
+                    })}
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })()}
 
           {/* Member: Single Collaborations link */}
           {memberOrganizations.length > 0 && (
             <Button
               variant={
-                pathname.startsWith("/organization/") && !organizations.some((o: any) => pathname.startsWith(`/organization/${o.id}`))
+                pathname.startsWith("/organization/") &&
+                !organizations.some((o: any) =>
+                  pathname.startsWith(`/organization/${o.id}`),
+                )
                   ? "secondary"
                   : "ghost"
               }
               className={`w-full justify-start pl-8 ${
-                pathname.startsWith("/organization/") && !organizations.some((o: any) => pathname.startsWith(`/organization/${o.id}`))
+                pathname.startsWith("/organization/") &&
+                !organizations.some((o: any) =>
+                  pathname.startsWith(`/organization/${o.id}`),
+                )
                   ? "bg-blue-50 border-l-4 border-blue-500"
                   : ""
               }`}
@@ -322,9 +367,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
                   memberOrganizations[0]?.org_id ||
                   memberOrganizations[0]?.organization?.id;
                 if (firstOrgId) {
-                  router.push(
-                    `/organization/${firstOrgId}/collaboration`,
-                  );
+                  router.push(`/organization/${firstOrgId}/collaboration`);
                 }
                 setSidebarOpen(false);
               }}
@@ -607,9 +650,37 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-center">
                   <Building className="h-5 w-5 text-blue-600 mr-2" />
-                  <h2 className="text-lg font-semibold text-blue-800">
-                    Working in: {organization.name}
+                  <h2 className="text-lg font-semibold text-blue-800 mr-3">
+                    Working in {organization.name}
                   </h2>
+
+                  {organization.userRole === "owner" ? (
+                    <span className="bg-red-200 py-1 px-2 rounded-lg flex items-center mr-2">
+                      <Crown className="h-4 w-4 mr-2" />
+                      Owner
+                    </span>
+                  ) : (
+                    <span className="bg-yellow-200 py-1 px-2 rounded-lg flex items-center mr-2">
+                      <Crown className="h-4 w-4 mr-2" />
+                      Member
+                    </span>
+                  )}
+
+                  <Tooltip delayDuration={300}>
+                    <TooltipTrigger>
+                      <CircleAlert className="h-5 w-5 text-blue-800" />
+                    </TooltipTrigger>
+                    <TooltipPortal>
+                      <TooltipContent
+                        className="bg-white text-blue-900 text-md shadow-md"
+                        sideOffset={5}
+                      >
+                        This tag refers to ownership since you can be a owner or
+                        member of an organization.
+                        <TooltipArrow className="fill-white" />
+                      </TooltipContent>
+                    </TooltipPortal>
+                  </Tooltip>
                 </div>
                 <p className="text-sm text-blue-600 mt-1">
                   All data shown belongs to this organization

@@ -128,7 +128,6 @@ export const OrganizationProvider = ({
           const userMemberOrganizationData =
             await getMemberAssociatedOrganization(userId);
 
-          debugger;
           if (
             userMemberOrganizationData &&
             userMemberOrganizationData.length > 0

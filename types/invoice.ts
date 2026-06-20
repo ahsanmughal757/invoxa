@@ -104,6 +104,7 @@ export interface Organization {
   logo_url?: string;
   branding?: any; // JSONB
   created_at: string; // ISO 8601 datetime string
+  userRole?: string;
 }
 
 export interface OrganizationMember {
