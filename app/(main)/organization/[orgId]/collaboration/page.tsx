@@ -57,6 +57,7 @@ import { useOrganization } from "@/hooks/use-organization";
 import { useExpenses } from "@/hooks/use-expenses";
 import { usePayments } from "@/hooks/use-payments";
 import { useClients } from "@/hooks/use-clients";
+import { getMemberActivityLogs, ActivityLog } from "@/lib/queries/members";
 import { InvoiceList } from "@/components/invoice/invoice-list";
 import { InvoiceForm } from "@/components/invoice/invoice-form";
 import { CollaborationGuard } from "@/components/guards/collaboration-guard";
@@ -97,6 +98,48 @@ function CollaborationDashboardContent() {
       getMembers(orgId);
     }
   }, [isOwner, orgId, getMembers]);
+
+  // Activity feed state
+  const [activities, setActivities] = useState<ActivityLog[]>([]);
+  const [filteredActivities, setFilteredActivities] = useState<ActivityLog[]>([]);
+  const [selectedMember, setSelectedMember] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [activityLoading, setActivityLoading] = useState(false);
+
+  // Fetch activities
+  useEffect(() => {
+    if (orgId) {
+      const fetchActivities = async () => {
+        try {
+          setActivityLoading(true);
+          const fetchedActivities = await getMemberActivityLogs(orgId);
+          setActivities(fetchedActivities);
+          setFilteredActivities(fetchedActivities);
+        } catch (err) {
+          console.error("Error fetching activities:", err);
+        } finally {
+          setActivityLoading(false);
+        }
+      };
+      fetchActivities();
+    }
+  }, [orgId]);
+
+  // Filter activities
+  useEffect(() => {
+    let filtered = activities;
+    if (selectedMember !== "all") {
+      filtered = filtered.filter((activity) => activity.memberId === selectedMember);
+    }
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (activity) =>
+          activity.memberName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          activity.entityName.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+    }
+    setFilteredActivities(filtered);
+  }, [selectedMember, searchTerm, activities]);
 
   // Calculate organization statistics
   const orgStats = useMemo(() => {
@@ -158,6 +201,65 @@ function CollaborationDashboardContent() {
       router.push(`/organization/${newOrgId}/collaboration`);
     }
   };
+
+  const getActionText = (
+    action: string,
+    entityName: string,
+    entityAmount?: number,
+  ) => {
+    switch (action) {
+      case "created_invoice":
+        return `created invoice ${entityName} for ${formatCurrency(entityAmount || 0)}`;
+      case "created_expense":
+        return `added expense ${entityName} for ${formatCurrency(entityAmount || 0)}`;
+      case "added_client":
+        return `added client ${entityName}`;
+      case "made_payment":
+        return `recorded payment for ${entityName} of ${formatCurrency(entityAmount || 0)}`;
+      default:
+        return `${action.replace("_", " ")} ${entityName}`;
+    }
+  };
+
+  const getActivityIcon = (entityType: string) => {
+    switch (entityType) {
+      case "invoice":
+        return <FileText className="h-4 w-4 text-blue-500" />;
+      case "expense":
+        return <Receipt className="h-4 w-4 text-red-500" />;
+      case "client":
+        return <Users className="h-4 w-4 text-green-500" />;
+      case "payment":
+        return <DollarSign className="h-4 w-4 text-yellow-500" />;
+      default:
+        return <Activity className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const getActivityBadgeVariant = (entityType: string) => {
+    switch (entityType) {
+      case "invoice":
+        return "default";
+      case "expense":
+        return "destructive";
+      case "client":
+        return "secondary";
+      case "payment":
+        return "outline";
+      default:
+        return "outline";
+    }
+  };
+
+  const uniqueMembers = activities.reduce<{ id: string; name: string }[]>(
+    (acc, activity) => {
+      if (!acc.find((m) => m.id === activity.memberId)) {
+        acc.push({ id: activity.memberId, name: activity.memberName });
+      }
+      return acc;
+    },
+    [],
+  );
 
   if (isLoading) {
     return (
@@ -334,15 +436,86 @@ function CollaborationDashboardContent() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span>Payments Received</span>
-                      <span className="font-medium">{orgStats.totalPayments}</span>
+                  <div className="space-y-4">
+                    {/* Activity Filters */}
+                    <div className="flex flex-col md:flex-row gap-4">
+                      <div className="flex-1">
+                        <div className="relative">
+                          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+                          <input
+                            type="text"
+                            placeholder="Search activities..."
+                            className="pl-8 w-full p-2 border rounded-md"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <select
+                          className="p-2 border rounded-md"
+                          value={selectedMember}
+                          onChange={(e) => setSelectedMember(e.target.value)}
+                        >
+                          <option value="all">All Members</option>
+                          {uniqueMembers.map((member) => (
+                            <option key={member.id} value={member.id}>
+                              {member.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Expenses Recorded</span>
-                      <span className="font-medium">{orgStats.totalExpenses}</span>
-                    </div>
+
+                    {/* Activity List */}
+                    {activityLoading ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>Loading activities...</p>
+                      </div>
+                    ) : filteredActivities.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <Activity className="h-12 w-12 mx-auto text-gray-300 mb-2" />
+                        <p>No activities found</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                        {filteredActivities.map((activity) => (
+                          <div
+                            key={activity.id}
+                            className="flex items-start p-4 border rounded-lg"
+                          >
+                            <div className="mr-4 mt-1">
+                              {getActivityIcon(activity.entityType)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="font-medium truncate">
+                                  <span className="font-semibold">
+                                    {activity.memberName}
+                                  </span>{" "}
+                                  {getActionText(
+                                    activity.action,
+                                    activity.entityName,
+                                    activity.entityAmount,
+                                  )}
+                                </p>
+                                <Badge
+                                  variant={getActivityBadgeVariant(
+                                    activity.entityType,
+                                  )}
+                                  className="shrink-0"
+                                >
+                                  {activity.entityType}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-gray-500">
+                                {formatDate(activity.created_at)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
