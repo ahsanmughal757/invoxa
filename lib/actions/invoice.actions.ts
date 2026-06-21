@@ -11,6 +11,7 @@ import {
 import { getSupabaseUser } from "@/lib/auth";
 import { auth } from "@clerk/nextjs/server";
 import { Logger } from "@/lib/utils/logger";
+import { logInvoiceActivity } from "@/lib/utils/activity-logger";
 import { getOrganizationsByOwnerId } from "@/lib/repositories/organizations.repository.func";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Invoice, InvoiceStructure } from "@/types/invoice";
@@ -103,6 +104,20 @@ export async function createInvoiceAction(
     // Use the function to create the invoice
     const result = await createInvoice(transformedInvoiceData);
 
+    // Log the activity
+    try {
+      await logInvoiceActivity(orgId, userProfile.id, result.id, "created", {
+        number: result.number,
+        client_id: result.client_id,
+        total: result.total,
+        items_count: result.invoice_items?.length || 0,
+      });
+    } catch (activityError) {
+      Logger.error("CREATE_INVOICE_ACTION_ACTIVITY", "Error logging invoice creation", activityError, {
+        details: { orgId, userId, invoiceId: result.id },
+      });
+    }
+
     revalidateTag(CACHE_TAGS.INVOICES(orgId));
     revalidateTag(CACHE_TAGS.DASHBOARD(orgId));
 
@@ -111,6 +126,64 @@ export async function createInvoiceAction(
     console.error("Error in createInvoiceAction:", error);
     Logger.error(
       "CREATE_INVOICE_ACTION",
+      "Unexpected error occurred",
+      {},
+      { details: { error } },
+    );
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+export async function deleteInvoiceAction(invoiceId: string, orgId: string) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const userProfile = await getSupabaseUser();
+    if (!userProfile) {
+      throw new Error("User profile not found");
+    }
+
+    if (!orgId) {
+      return {
+        success: false,
+        error: "Organization ID is required to delete an invoice",
+      };
+    }
+
+    // Fetch invoice details before deletion for activity metadata
+    const supabase = await createAdminClient();
+    const { data: currentInvoice } = await supabase
+      .from("invoices")
+      .select("number, total, client_id")
+      .eq("id", invoiceId)
+      .single();
+
+    const result = await deleteInvoice(invoiceId);
+
+    // Log the activity
+    try {
+      await logInvoiceActivity(orgId, userProfile.id, invoiceId, "deleted", {
+        number: currentInvoice?.number,
+        total: currentInvoice?.total,
+        client_id: currentInvoice?.client_id,
+      });
+    } catch (activityError) {
+      Logger.error("DELETE_INVOICE_ACTION_ACTIVITY", "Error logging invoice deletion", activityError, {
+        details: { orgId, userId, invoiceId },
+      });
+    }
+
+    revalidateTag(CACHE_TAGS.INVOICES(orgId));
+    revalidateTag(CACHE_TAGS.DASHBOARD(orgId));
+
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("Error in deleteInvoiceAction:", error);
+    Logger.error(
+      "DELETE_INVOICE_ACTION",
       "Unexpected error occurred",
       {},
       { details: { error } },
@@ -263,6 +336,20 @@ export async function updateInvoiceAction(
 
     // Use the function to update the invoice
     const result = await updateInvoice(invoiceId, updates);
+
+    // Log the activity
+    if (result) {
+      try {
+        await logInvoiceActivity(orgId, userProfile.id, invoiceId, "updated", {
+          updated_fields: Object.keys(updates),
+          number: result.number,
+        });
+      } catch (activityError) {
+        Logger.error("UPDATE_INVOICE_ACTION_ACTIVITY", "Error logging invoice update", activityError, {
+          details: { orgId, userId, invoiceId },
+        });
+      }
+    }
 
     revalidateTag(CACHE_TAGS.INVOICES(orgId));
     revalidateTag(CACHE_TAGS.DASHBOARD(orgId));

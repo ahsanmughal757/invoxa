@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { Expense } from "@/types/invoice";
 import { Logger } from "@/lib/utils/logger";
+import { logExpenseActivity } from "@/lib/utils/activity-logger";
 
 // Get expenses for an organization (accessible by members)
 export const getExpensesForOrg = async (orgId: string) => {
@@ -64,6 +65,19 @@ export const createExpenseForOrg = async (
     throw error;
   }
 
+  // Log the activity
+  try {
+    await logExpenseActivity(orgId, userId, data.id, "created", {
+      description: data.description,
+      amount: data.amount,
+      date: data.date,
+    });
+  } catch (activityError) {
+    Logger.error("CREATE_EXPENSE_FOR_ORG_ACTIVITY", "Error logging expense creation", activityError, {
+      details: { orgId, userId, expenseId: data.id },
+    });
+  }
+
   Logger.info(
     "CREATE_EXPENSE_FOR_ORG",
     "Expense created successfully for organization",
@@ -120,6 +134,19 @@ export const updateExpenseForOrg = async (
     throw error;
   }
 
+  // Log the activity
+  try {
+    await logExpenseActivity(currentExpense.org_id, userId, id, "updated", {
+      updated_fields: Object.keys(updates),
+      description: data?.description,
+      amount: data?.amount,
+    });
+  } catch (activityError) {
+    Logger.error("UPDATE_EXPENSE_FOR_ORG_ACTIVITY", "Error logging expense update", activityError, {
+      details: { orgId: currentExpense.org_id, userId, expenseId: id },
+    });
+  }
+
   Logger.info(
     "UPDATE_EXPENSE_FOR_ORG",
     "Expense updated successfully for organization",
@@ -136,10 +163,10 @@ export const updateExpenseForOrg = async (
 export const deleteExpenseForOrg = async (id: string, userId: string) => {
   const supabase = await createAdminClient();
 
-  // Get the current expense to get the org_id for validation
+  // Get the current expense to get the org_id and details for activity logging
   const { data: currentExpense, error: fetchError } = await supabase
     .from("expenses")
-    .select("org_id")
+    .select("org_id, description, amount")
     .eq("id", id)
     .single();
 
@@ -160,6 +187,18 @@ export const deleteExpenseForOrg = async (id: string, userId: string) => {
       entityId: id,
     });
     throw error;
+  }
+
+  // Log the activity
+  try {
+    await logExpenseActivity(currentExpense.org_id, userId, id, "deleted", {
+      description: currentExpense.description,
+      amount: currentExpense.amount,
+    });
+  } catch (activityError) {
+    Logger.error("DELETE_EXPENSE_FOR_ORG_ACTIVITY", "Error logging expense deletion", activityError, {
+      details: { orgId: currentExpense.org_id, userId, expenseId: id },
+    });
   }
 
   Logger.info(

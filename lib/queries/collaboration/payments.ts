@@ -2,6 +2,7 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { PaymentRecord, Invoice } from '@/types/invoice';
 import { Logger } from '@/lib/utils/logger';
+import { logPaymentActivity } from '@/lib/utils/activity-logger';
 
 // Get payments for an organization (accessible by members)
 export const getPaymentsForOrg = async (orgId: string) => {
@@ -66,6 +67,20 @@ export const recordPaymentForOrg = async (
   if (error) {
     Logger.error('RECORD_PAYMENT_FOR_ORG', 'Error recording payment', error, { orgId, details: { invoiceId: paymentData.invoice_id } });
     throw error;
+  }
+
+  // Log the activity
+  try {
+    await logPaymentActivity(orgId, userId, data.id, "created", {
+      amount: data.amount,
+      method: data.method,
+      invoice_id: data.invoice_id,
+      received_on: data.received_on,
+    });
+  } catch (activityError) {
+    Logger.error("RECORD_PAYMENT_FOR_ORG_ACTIVITY", "Error logging payment creation", activityError, {
+      details: { orgId, userId, paymentId: data.id },
+    });
   }
 
   // Re-fetch the updated invoice to get the new paid_amount and status
@@ -136,6 +151,19 @@ export const updatePaymentForOrg = async (id: string, updates: Partial<PaymentRe
     throw error;
   }
 
+  // Log the activity
+  try {
+    await logPaymentActivity(orgId, userId, id, "updated", {
+      updated_fields: Object.keys(updates),
+      amount: data?.amount,
+      invoice_id: currentPayment.invoice_id,
+    });
+  } catch (activityError) {
+    Logger.error("UPDATE_PAYMENT_FOR_ORG_ACTIVITY", "Error logging payment update", activityError, {
+      details: { orgId, userId, paymentId: id },
+    });
+  }
+
   // Re-fetch the updated invoice to get the new paid_amount and status
   const { data: updatedInvoice, error: invoiceFetchError } = await supabase
     .from('invoices')
@@ -194,6 +222,17 @@ export const deletePaymentForOrg = async (id: string, userId: string) => {
   if (error) {
     Logger.error('DELETE_PAYMENT_FOR_ORG', 'Error deleting payment', error, { entityId: id });
     throw error;
+  }
+
+  // Log the activity
+  try {
+    await logPaymentActivity(orgId, userId, id, "deleted", {
+      invoice_id: currentPayment.invoice_id,
+    });
+  } catch (activityError) {
+    Logger.error("DELETE_PAYMENT_FOR_ORG_ACTIVITY", "Error logging payment deletion", activityError, {
+      details: { orgId, userId, paymentId: id },
+    });
   }
 
   // Re-fetch the updated invoice to get the new paid_amount and status

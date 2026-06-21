@@ -5,11 +5,15 @@ import {
   createClient,
   updateClient,
   deleteClient,
+  getClientById,
   getClientsByOrgId,
 } from "@/lib/repositories/clients.repository.func";
 import { getSupabaseUser } from "@/lib/auth";
 import { auth } from "@clerk/nextjs/server";
 import { logSuccess, Logger } from "@/lib/utils/logger";
+import {
+  logClientActivity,
+} from "@/lib/utils/activity-logger";
 import {
   getOrganizationById,
   getOrganizationsByOwnerId,
@@ -86,8 +90,17 @@ export async function createClientAction(clientData: ClientData) {
 
     const result = await createClient({ ...clientData });
 
-    // Log successful client creation
-    logSuccess.clientCreated(result.id, userId, orgIdStr);
+    // Log the activity
+    try {
+      await logClientActivity(orgIdStr, userProfile.id, result.id, "created", {
+        name: result.name,
+        email: result.email,
+      });
+    } catch (activityError) {
+      Logger.error("CREATE_CLIENT_ACTION_ACTIVITY", "Error logging client creation", activityError, {
+        details: { orgId: orgIdStr, userId, clientId: result.id },
+      });
+    }
 
     revalidateTag(CACHE_TAGS.CLIENTS(orgIdStr));
 
@@ -139,8 +152,17 @@ export async function createClientForOrgAction(
 
     const result = await createClient({ ...clientData });
 
-    // Log successful client creation
-    logSuccess.clientCreated(result.id, userId, orgIdStr);
+    // Log the activity
+    try {
+      await logClientActivity(orgIdStr, userProfile.id, result.id, "created", {
+        name: result.name,
+        email: result.email,
+      });
+    } catch (activityError) {
+      Logger.error("CREATE_CLIENT_FOR_ORG_ACTION_ACTIVITY", "Error logging client creation", activityError, {
+        details: { orgId: orgIdStr, userId, clientId: result.id },
+      });
+    }
 
     revalidateTag(CACHE_TAGS.CLIENTS(orgIdStr));
 
@@ -187,8 +209,17 @@ export async function updateClientAction(
     // Handle the type properly since orgId can be null
     const result = await updateClient(clientId, updates);
 
-    // Log successful client update
-    logSuccess.clientUpdated(clientId, userId, orgId);
+    // Log the activity
+    try {
+      await logClientActivity(orgId, userProfile.id, clientId, "updated", {
+        updated_fields: Object.keys(updates),
+        name: result?.name,
+      });
+    } catch (activityError) {
+      Logger.error("UPDATE_CLIENT_ACTION_ACTIVITY", "Error logging client update", activityError, {
+        details: { orgId, userId, clientId },
+      });
+    }
 
     revalidateTag(CACHE_TAGS.CLIENTS(orgId));
 
@@ -206,7 +237,7 @@ export async function updateClientAction(
 }
 
 export async function deleteClientAction(clientId: string) {
-  let userId, userProfile, id;
+  let userId, userProfile, id, orgId;
   try {
     ({ userId } = await auth());
     if (!userId) {
@@ -222,16 +253,29 @@ export async function deleteClientAction(clientId: string) {
       throw new Error("User profile not found");
     }
 
+    // Fetch client before deletion to get org_id and name for logging
+    const currentClient = await getClientById(clientId);
+    if (currentClient) {
+      orgId = currentClient.org_id;
+    } else {
+      orgId = userProfile.org_id;
+    }
+
     await deleteClient(clientId);
 
-    // Log successful client deletion
-    Logger.success(
-      "DELETE_CLIENT_ACTION",
-      `Client deleted successfully clientId: ${clientId}`,
-      null,
-    );
+    // Log the activity
+    try {
+      await logClientActivity(orgId, userProfile.id, clientId, "deleted", {
+        name: currentClient?.name,
+        email: currentClient?.email,
+      });
+    } catch (activityError) {
+      Logger.error("DELETE_CLIENT_ACTION_ACTIVITY", "Error logging client deletion", activityError, {
+        details: { orgId, userId, clientId },
+      });
+    }
 
-    revalidateTag(CACHE_TAGS.CLIENTS(userProfile.org_id));
+    revalidateTag(CACHE_TAGS.CLIENTS(orgId));
 
     return { success: true };
   } catch (error) {
@@ -335,8 +379,17 @@ export async function createClientForMemberOrganizationAction(
 
     const result = await createClient({ ...clientData, org_id: orgIdStr });
 
-    // Log successful client creation
-    logSuccess.clientCreated(result.id, userId, orgIdStr);
+    // Log the activity
+    try {
+      await logClientActivity(orgIdStr, userProfile.id, result.id, "created", {
+        name: result.name,
+        email: result.email,
+      });
+    } catch (activityError) {
+      Logger.error("CREATE_CLIENT_FOR_MEMBER_ORG_ACTIVITY", "Error logging client creation", activityError, {
+        details: { orgId: orgIdStr, userId, clientId: result.id },
+      });
+    }
 
     revalidateTag(CACHE_TAGS.CLIENTS(orgIdStr));
 

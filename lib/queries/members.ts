@@ -68,9 +68,17 @@ export interface ActivityLog {
   memberName: string;
   action:
     | "created_invoice"
+    | "updated_invoice"
+    | "deleted_invoice"
     | "created_expense"
+    | "updated_expense"
+    | "deleted_expense"
     | "added_client"
+    | "updated_client"
+    | "deleted_client"
     | "made_payment"
+    | "updated_payment"
+    | "deleted_payment"
     | "none";
   entityName: string;
   entityAmount?: number;
@@ -599,9 +607,17 @@ const mapActionToActivity = (
   entityType: string,
 ):
   | "created_invoice"
+  | "updated_invoice"
+  | "deleted_invoice"
   | "created_expense"
+  | "updated_expense"
+  | "deleted_expense"
   | "added_client"
+  | "updated_client"
+  | "deleted_client"
   | "made_payment"
+  | "updated_payment"
+  | "deleted_payment"
   | "none" => {
   switch (entityType) {
     case "invoice":
@@ -609,9 +625,9 @@ const mapActionToActivity = (
         case "created":
           return "created_invoice";
         case "updated":
-          return "created_invoice";
+          return "updated_invoice";
         case "deleted":
-          return "created_invoice";
+          return "deleted_invoice";
         default:
           return "created_invoice";
       }
@@ -620,9 +636,9 @@ const mapActionToActivity = (
         case "created":
           return "created_expense";
         case "updated":
-          return "created_expense";
+          return "updated_expense";
         case "deleted":
-          return "created_expense";
+          return "deleted_expense";
         default:
           return "created_expense";
       }
@@ -631,9 +647,9 @@ const mapActionToActivity = (
         case "created":
           return "added_client";
         case "updated":
-          return "added_client";
+          return "updated_client";
         case "deleted":
-          return "added_client";
+          return "deleted_client";
         default:
           return "added_client";
       }
@@ -642,9 +658,9 @@ const mapActionToActivity = (
         case "created":
           return "made_payment";
         case "updated":
-          return "made_payment";
+          return "updated_payment";
         case "deleted":
-          return "made_payment";
+          return "deleted_payment";
         default:
           return "made_payment";
       }

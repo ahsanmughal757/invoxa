@@ -6,6 +6,7 @@ import {
   getInvoiceByIdAction,
   createInvoiceAction,
   updateInvoiceAction,
+  deleteInvoiceAction,
   InvoiceData,
 } from "@/lib/actions/invoice.actions";
 import { Invoice, InvoiceStructure } from "@/types/invoice";
@@ -58,10 +59,7 @@ export function useDeleteInvoiceMutation(orgId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) =>
-      import("@/lib/services/invoice.service.func").then((m) =>
-        m.deleteInvoice(id),
-      ),
+    mutationFn: (id: string) => deleteInvoiceAction(id, orgId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices", orgId] });
       queryClient.invalidateQueries({ queryKey: ["dashboard", orgId] });
