@@ -12,7 +12,7 @@ const Footer: React.FC = () => {
               <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
                 <FileText className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-white tracking-tight">Invoice<span className="text-indigo-400">Pro</span></span>
+              <span className="text-xl font-bold text-white tracking-tight">Invoxa</span>
             </div>
             <p className="max-w-xs text-slate-500 text-sm leading-relaxed mb-8">
               The premium invoicing solution for the modern entrepreneur. Built with security, speed, and aesthetics in mind.

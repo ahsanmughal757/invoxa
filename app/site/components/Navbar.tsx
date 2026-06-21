@@ -24,11 +24,11 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = [
-    { name: "Features", href: "#features" },
-    { name: "Platform", href: "#platform" },
-    { name: "Team", href: "#team" },
-    { name: "Pricing", href: "#pricing" },
+  const navLinks: any = [
+    // { name: "Features", href: "#features" },
+    // { name: "Platform", href: "#platform" },
+    // { name: "Team", href: "#team" },
+    // { name: "Pricing", href: "#pricing" },
   ];
 
   return (
@@ -46,7 +46,7 @@ const Navbar: React.FC = () => {
               <FileText className="w-6 h-6 text-white" />
             </div>
             <span className="text-2xl font-black text-white tracking-tighter">
-              Invoice<span className="text-indigo-400">Pro</span>
+              Invoxa
             </span>
           </div>
 

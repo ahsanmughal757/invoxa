@@ -3,12 +3,9 @@
 import React from "react";
 import Navbar from "./site/components/Navbar";
 import Hero from "./site/components/Hero";
-import Features from "./site/components/Features";
-import Showcase from "./site/components/Showcase";
-import Team from "./site/components/Team";
-import Pricing from "./site/components/Pricing";
-import Testimonials from "./site/components/Testimonials";
-import Footer from "./site/components/Footer";
+// import Features from "./site/components/Features";
+// import Pricing from "./site/components/Pricing";
+// import Footer from "./site/components/Footer";
 
 function App() {
   return (
@@ -26,27 +23,13 @@ function App() {
         <main>
           <Hero />
 
-          <div className="relative">
+          {/*<div className="relative">
             <div className="lighting-glow bg-indigo-500/10 w-[500px] h-[500px] top-0 left-0"></div>
             <Features />
           </div>
 
-          <div className="relative bg-slate-950">
-            <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-slate-950 to-transparent"></div>
-            <Showcase />
-            <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-slate-950 to-transparent"></div>
-          </div>
-
-          <Team />
-
-          <div className="relative">
-            <div className="lighting-glow bg-purple-500/5 w-[400px] h-[400px] bottom-0 right-0"></div>
-            <Testimonials />
-          </div>
-
           <Pricing />
 
-          {/* Final CTA with specific highlight */}
           <section className="py-32">
             <div className="max-w-5xl mx-auto px-4 text-center">
               <div className="relative glass-card p-12 md:p-24 rounded-[4rem] border border-white/10 overflow-hidden group">
@@ -72,10 +55,10 @@ function App() {
                 </div>
               </div>
             </div>
-          </section>
+          </section>*/}
         </main>
 
-        <Footer />
+        {/*<Footer />*/}
       </div>
     </div>
   );
