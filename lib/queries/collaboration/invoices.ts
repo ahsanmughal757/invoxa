@@ -1,6 +1,5 @@
 "use server";
 
-import { cache } from "react";
 import { createAdminClient } from '@/lib/supabase/server';
 import { Invoice, InvoiceItem } from '@/types/invoice';
 import { Logger } from '@/lib/utils/logger';
@@ -8,7 +7,7 @@ import { generateInvoiceNumber } from '@/lib/utils';
 import { createInvoiceWithItems as createInvoiceWithItemsRepo } from '@/lib/repositories/invoices.repository.func';
 
 // Get invoices for an organization (accessible by members)
-export const getInvoicesForOrg = cache(async (orgId: string) => {
+export const getInvoicesForOrg = async (orgId: string) => {
   const supabase = await createAdminClient();
 
   const { data, error } = await supabase
@@ -23,7 +22,7 @@ export const getInvoicesForOrg = cache(async (orgId: string) => {
 
   Logger.info('GET_INVOICES_FOR_ORG', 'Invoices fetched successfully for organization', { orgId, entityType: 'invoices', details: { count: data.length } });
   return data as Invoice[];
-});
+}
 
 // Create invoice for an organization (accessible by members) using transactional approach
 export const createInvoiceForOrg = async (

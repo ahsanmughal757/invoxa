@@ -6,10 +6,8 @@ import { Logger } from "@/lib/utils/logger";
 import { logInvoiceActivity } from "@/lib/utils/activity-logger";
 import { createInvoiceWithItems as createInvoiceWithItemsRepo } from "@/lib/repositories/invoices.repository.func";
 
-import { cache } from "react";
-
 // Get invoices by organization ID
-export const getInvoicesByOrgId = cache(async (orgId: string) => {
+export const getInvoicesByOrgId = async (orgId: string) => {
   const supabase = await createAdminClient();
 
   const { data, error } = await supabase
@@ -28,10 +26,10 @@ export const getInvoicesByOrgId = cache(async (orgId: string) => {
     details: { count: data.length },
   });
   return data as Invoice[];
-});
+}
 
 // Get invoice by ID with items
-export const getInvoiceByIdWithItems = cache(async (id: string) => {
+export const getInvoiceByIdWithItems = async (id: string) => {
   const supabase = await createAdminClient();
 
   const { data, error } = await supabase
@@ -61,7 +59,7 @@ export const getInvoiceByIdWithItems = cache(async (id: string) => {
     entityType: "invoice",
   });
   return data as Invoice;
-});
+}
 
 // Create invoice with items using transactional approach
 export const createInvoice = async (

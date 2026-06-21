@@ -1,12 +1,11 @@
 'use server';
-import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/server";
 import { PaymentRecord, Invoice } from "@/types/invoice";
 import { Logger } from "@/lib/utils/logger";
 import { logPaymentActivity } from "@/lib/utils/activity-logger";
 
 // Get payments by invoice IDs
-export const getPaymentsByInvoiceIds = cache(async (invoiceIds: string[]) => {
+export const getPaymentsByInvoiceIds = async (invoiceIds: string[]) => {
   const supabase = await createAdminClient();
 
   const { data, error } = await supabase
@@ -29,10 +28,10 @@ export const getPaymentsByInvoiceIds = cache(async (invoiceIds: string[]) => {
     },
   });
   return data as PaymentRecord[];
-});
+}
 
 // Get payments for a client based on their Clerk user ID
-export const getClientPayments = cache(async (userId: string) => {
+export const getClientPayments = async (userId: string) => {
   const supabase = await createAdminClient();
 
   // Get profile matching clerk's userId
@@ -71,7 +70,7 @@ export const getClientPayments = cache(async (userId: string) => {
   });
 
   return payments as PaymentRecord[];
-});
+}
 
 
 // Record payment

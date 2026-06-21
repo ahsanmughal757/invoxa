@@ -1,11 +1,10 @@
 "use server";
 
-import { cache } from "react";
 import { getSupabaseClient } from "./base.repository";
 import { Invoice, InvoiceItem, InvoiceStructure } from "@/types/invoice";
 import { Logger } from "../utils/logger";
 
-export const getInvoicesByOrgId = cache(async (orgId: string) => {
+export const getInvoicesByOrgId = async (orgId: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -23,9 +22,9 @@ export const getInvoicesByOrgId = cache(async (orgId: string) => {
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data as Invoice[]));
-});
+}
 
-export const getInvoiceByIdWithItems = cache(async (id: string) => {
+export const getInvoiceByIdWithItems = async (id: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -45,7 +44,7 @@ export const getInvoiceByIdWithItems = cache(async (id: string) => {
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data as Invoice));
-});
+}
 
 export async function createInvoice(invoiceData: any) {
   const supabase = await getSupabaseClient();

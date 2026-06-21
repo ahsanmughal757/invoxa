@@ -1,6 +1,5 @@
 "use server";
 
-import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { Logger } from "@/lib/utils/logger";
@@ -80,7 +79,7 @@ export interface ActivityLog {
 }
 
 // Get all members of an organization with their activity statistics
-export const getOrganizationMembers = cache(async (orgId: string) => {
+export const getOrganizationMembers = async (orgId: string) => {
   const supabase = await createAdminClient();
   const client = await clerkClient();
 
@@ -376,10 +375,10 @@ export const getOrganizationMembers = cache(async (orgId: string) => {
     );
     throw error;
   }
-});
+}
 
 // Get activity logs for all members in an organization
-export const getMemberActivityLogs = cache(async (
+export const getMemberActivityLogs = async (
   orgId: string,
   filters?: { memberId?: string; dateFrom?: string; dateTo?: string },
 ) => {
@@ -592,7 +591,7 @@ export const getMemberActivityLogs = cache(async (
     );
     throw error;
   }
-});
+}
 
 // Helper function to map action to activity text based on entity type
 const mapActionToActivity = (
@@ -655,7 +654,7 @@ const mapActionToActivity = (
 };
 
 // Get aggregated statistics for members in an organization
-export const getMemberStatistics = cache(async (orgId: string) => {
+export const getMemberStatistics = async (orgId: string) => {
   const supabase = await createAdminClient();
 
   try {
@@ -781,10 +780,10 @@ export const getMemberStatistics = cache(async (orgId: string) => {
     );
     throw error;
   }
-});
+}
 
 // Fallback function to calculate member stats manually if RPC is not available
-const calculateMemberStatsFallback = cache(async (orgId: string) => {
+const calculateMemberStatsFallback = async (orgId: string) => {
   const supabase = await createAdminClient();
 
   try {
@@ -904,4 +903,4 @@ const calculateMemberStatsFallback = cache(async (orgId: string) => {
     );
     throw error;
   }
-});
+}

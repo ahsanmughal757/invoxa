@@ -1,10 +1,9 @@
 "use server";
 
-import { cache } from "react";
 import { getSupabaseClient } from "./base.repository";
 import { Expense } from "@/types/invoice";
 
-export const getExpensesByOrgId = cache(async (orgId: string) => {
+export const getExpensesByOrgId = async (orgId: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -22,9 +21,9 @@ export const getExpensesByOrgId = cache(async (orgId: string) => {
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data as Expense[]));
-});
+}
 
-export const getExpenseById = cache(async (id: string) => {
+export const getExpenseById = async (id: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -43,7 +42,7 @@ export const getExpenseById = cache(async (id: string) => {
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data as Expense));
-});
+}
 
 export async function createExpense(expenseData: any) {
   const supabase = await getSupabaseClient();

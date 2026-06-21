@@ -1,11 +1,10 @@
 "use server";
-import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Organization, OrganizationMember } from "@/types/invoice";
 import { Logger } from "@/lib/utils/logger";
 
 // Get organization by ID
-export const getOrganizationById = cache(async (id: string) => {
+export const getOrganizationById = async (id: string) => {
   const supabase = await createAdminClient();
 
   const { data, error } = await supabase
@@ -35,7 +34,7 @@ export const getOrganizationById = cache(async (id: string) => {
     entityType: "organization",
   });
   return data as Organization;
-});
+}
 
 // Update organization
 export const updateOrganization = async (
@@ -136,8 +135,8 @@ export const createOrganization = async (
 };
 
 // Get organization by owner user ID
-export const getOrganizationsByOwnerId = cache(
-  async (ownerUserId: string | null | undefined) => {
+export const getOrganizationsByOwnerId = async (
+  ownerUserId: string | null | undefined) => {
     const supabase = await createAdminClient();
 
     if (!ownerUserId) {
@@ -185,11 +184,10 @@ export const getOrganizationsByOwnerId = cache(
       },
     );
     return data as Organization;
-  },
-);
+  }
 
-export const getMemberAssociatedOrganization = cache(
-  async (ownerUserId: string) => {
+export const getMemberAssociatedOrganization = async (
+  ownerUserId: string) => {
     const supabase = await createAdminClient();
 
     if (!ownerUserId) {
@@ -272,11 +270,10 @@ export const getMemberAssociatedOrganization = cache(
     );
 
     return data as OrganizationMember[];
-  },
-);
+  }
 
 // Get profile by user ID
-export const getProfileByUserId = cache(async (userId: string) => {
+export const getProfileByUserId = async (userId: string) => {
   const supabase = await createAdminClient();
 
   const { data, error } = await supabase
@@ -304,12 +301,12 @@ export const getProfileByUserId = cache(async (userId: string) => {
     entityType: "profile",
   });
   return data;
-});
+}
 
 /**
  * Get all organizations for a user (both owned and member organizations)
  */
-export const getUserOrganizations = cache(async (userId: string) => {
+export const getUserOrganizations = async (userId: string) => {
   const supabase = await createAdminClient();
 
   if (!userId) {
@@ -418,7 +415,7 @@ export const getUserOrganizations = cache(async (userId: string) => {
     );
     throw error;
   }
-});
+}
 
 /**
  * Set user's active organization

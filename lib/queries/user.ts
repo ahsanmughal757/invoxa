@@ -1,9 +1,8 @@
 "use server";
-import { cache } from "react";
 import { Logger } from "../utils/logger";
 import { createAdminClient } from "../supabase/server";
 
-export const getDBUser = cache(async (id: string, type: "db" | "clerk") => {
+export const getDBUser = async (id: string, type: "db" | "clerk") => {
     try {
         const supabase = await createAdminClient();
         const { data: profileData, error: profileError } = await supabase.from("profiles")
@@ -29,12 +28,12 @@ export const getDBUser = cache(async (id: string, type: "db" | "clerk") => {
         Logger.error("GET_DB_USER", "Unexpected error", error, { userId: id });
         throw new Error(error)
     }
-});
+}
 
 /**
  * Get user's subscription from database
  */
-export const getUserSubscription = cache(async (clerkUserId: string) => {
+export const getUserSubscription = async (clerkUserId: string) => {
     try {
         const supabase = await createAdminClient();
         
@@ -56,12 +55,12 @@ export const getUserSubscription = cache(async (clerkUserId: string) => {
         Logger.error("GET_USER_SUBSCRIPTION", "Unexpected error", error, { details: { clerkUserId } });
         return null;
     }
-});
+}
 
 /**
  * Check if user has already used their trial
  */
-export const checkUserHasUsedTrial = cache(async (clerkUserId: string): Promise<boolean> => {
+export const checkUserHasUsedTrial = async (clerkUserId: string): Promise<boolean> => {
     try {
         const supabase = await createAdminClient();
         
@@ -80,5 +79,5 @@ export const checkUserHasUsedTrial = cache(async (clerkUserId: string): Promise<
         Logger.error("CHECK_USER_HAS_USED_TRIAL", "Error", error, { details: { clerkUserId } });
         return false;
     }
-});
+}
 

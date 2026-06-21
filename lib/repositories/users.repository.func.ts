@@ -1,10 +1,9 @@
 "use server";
 
-import { cache } from "react";
 import { getSupabaseClient } from "./base.repository";
 import { Logger } from "../utils/logger";
 
-export const getUserById = cache(async (id: string) => {
+export const getUserById = async (id: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -26,9 +25,9 @@ export const getUserById = cache(async (id: string) => {
   // Ensure the returned data is a plain object
   Logger.info("GET_USER_BY_ID", `User fetched id: ${id}`);
   return data;
-});
+}
 
-export const getUserByClerkId = cache(async (clerkId: string) => {
+export const getUserByClerkId = async (clerkId: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -50,7 +49,7 @@ export const getUserByClerkId = cache(async (clerkId: string) => {
   // Ensure the returned data is a plain object
   Logger.info("GET_USER_BY_CLERK_ID", `User fetched clerk id : ${clerkId}.`);
   return data;
-});
+}
 
 export async function getUserByEmail(email: string) {
   const supabase = await getSupabaseClient();

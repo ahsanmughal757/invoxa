@@ -1,4 +1,3 @@
-import { cache } from "react";
 import { Logger } from "../utils/logger";
 import { createAdminClient } from "../supabase/server";
 import { ClientSubscription } from "@/types/invoice";
@@ -34,7 +33,7 @@ export interface SubscriptionData {
 /**
  * Get user's current subscription from database
  */
-export const getUserSubscription = cache(async (
+export const getUserSubscription = async (
   clerkUserId: string,
 ): Promise<SubscriptionData | null> => {
   try {
@@ -89,12 +88,12 @@ export const getUserSubscription = cache(async (
     });
     return null;
   }
-});
+}
 
 /**
  * Check if user has an active trial
  */
-export const isTrialActive = cache(async (clerkUserId: string): Promise<boolean> => {
+export const isTrialActive = async (clerkUserId: string): Promise<boolean> => {
   try {
     const supabase = await createAdminClient();
     const userId = await getUserIdFromClerkId(clerkUserId);
@@ -130,12 +129,12 @@ export const isTrialActive = cache(async (clerkUserId: string): Promise<boolean>
     });
     return false;
   }
-});
+}
 
 /**
  * Get number of days remaining in trial (for 14-day trial)
  */
-export const getTrialDaysRemaining = cache(async (
+export const getTrialDaysRemaining = async (
   clerkUserId: string,
 ): Promise<number> => {
   try {
@@ -176,12 +175,12 @@ export const getTrialDaysRemaining = cache(async (
     });
     return 0;
   }
-});
+}
 
 /**
  * Get trial time remaining in seconds (for 3-minute trial)
  */
-export const getTrialTimeRemainingSeconds = cache(async (
+export const getTrialTimeRemainingSeconds = async (
   clerkUserId: string,
 ): Promise<number> => {
   try {
@@ -225,12 +224,12 @@ export const getTrialTimeRemainingSeconds = cache(async (
     });
     return 0;
   }
-});
+}
 
 /**
  * Get trial type for user ('3min' or '14day')
  */
-export const getTrialType = cache(async (
+export const getTrialType = async (
   clerkUserId: string,
 ): Promise<"3min" | "14day" | null> => {
   try {
@@ -268,12 +267,12 @@ export const getTrialType = cache(async (
     });
     return null;
   }
-});
+}
 
 /**
  * Check if user has lifetime access
  */
-export const isLifetimeAccess = cache(async (clerkUserId: string): Promise<boolean> => {
+export const isLifetimeAccess = async (clerkUserId: string): Promise<boolean> => {
   try {
     const supabase = await createAdminClient();
     const userId = await getUserIdFromClerkId(clerkUserId);
@@ -312,12 +311,12 @@ export const isLifetimeAccess = cache(async (clerkUserId: string): Promise<boole
     });
     return false;
   }
-});
+}
 
 /**
  * Check if user's subscription/trial is expired
  */
-export const isSubscriptionExpired = cache(async (
+export const isSubscriptionExpired = async (
   clerkUserId: string,
 ): Promise<boolean> => {
   try {
@@ -358,7 +357,7 @@ export const isSubscriptionExpired = cache(async (
     });
     return false;
   }
-});
+}
 
 /**
  * Create a trial subscription for a user
@@ -647,7 +646,7 @@ export async function updateExpiredSubscriptions(): Promise<boolean> {
 /**
  * Check if user has already used their trial
  */
-export const hasUsedTrial = cache(async (clerkUserId: string): Promise<boolean> => {
+export const hasUsedTrial = async (clerkUserId: string): Promise<boolean> => {
   try {
     const supabase = await createAdminClient();
 
@@ -682,4 +681,4 @@ export const hasUsedTrial = cache(async (clerkUserId: string): Promise<boolean> 
     });
     return false;
   }
-});
+}

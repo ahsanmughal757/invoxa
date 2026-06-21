@@ -1,6 +1,5 @@
 "use server";
 
-import { cache } from "react";
 import { getSupabaseClient } from "./base.repository";
 
 export async function createInvite(inviteData: any) {
@@ -41,7 +40,7 @@ export async function getInviteByToken(token: string) {
   return JSON.parse(JSON.stringify(data));
 }
 
-export const getInviteById = cache(async (id: string) => {
+export const getInviteById = async (id: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -60,7 +59,7 @@ export const getInviteById = cache(async (id: string) => {
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data));
-});
+}
 
 export async function updateInvite(id: string, updates: any) {
   const supabase = await getSupabaseClient();
@@ -92,7 +91,7 @@ export async function deleteInvite(id: string) {
   return { success: true };
 }
 
-export const getInvitesByOrganizationId = cache(async (organizationId: string) => {
+export const getInvitesByOrganizationId = async (organizationId: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -110,9 +109,9 @@ export const getInvitesByOrganizationId = cache(async (organizationId: string) =
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data));
-});
+}
 
-export const getInvitesByUserId = cache(async (userId: string) => {
+export const getInvitesByUserId = async (userId: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -130,7 +129,7 @@ export const getInvitesByUserId = cache(async (userId: string) => {
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data));
-});
+}
 
 export async function getReceivedInvitesByEmail(email: string) {
   const supabase = await getSupabaseClient();

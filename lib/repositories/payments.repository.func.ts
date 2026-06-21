@@ -1,10 +1,9 @@
 "use server";
 
-import { cache } from "react";
 import { getSupabaseClient } from "./base.repository";
 import { PaymentRecord } from "@/types/invoice";
 
-export const getPaymentsByInvoiceIds = cache(async (invoiceIds: string[]) => {
+export const getPaymentsByInvoiceIds = async (invoiceIds: string[]) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -22,9 +21,9 @@ export const getPaymentsByInvoiceIds = cache(async (invoiceIds: string[]) => {
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data as PaymentRecord[]));
-});
+}
 
-export const getPaymentsByOrgId = cache(async (orgId: string) => {
+export const getPaymentsByOrgId = async (orgId: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -42,7 +41,7 @@ export const getPaymentsByOrgId = cache(async (orgId: string) => {
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data as PaymentRecord[]));
-});
+}
 
 export async function createPayment(paymentData: any) {
   const supabase = await getSupabaseClient();
@@ -91,7 +90,7 @@ export async function deletePayment(id: string) {
   return { success: true };
 }
 
-export const getPaymentById = cache(async (id: string) => {
+export const getPaymentById = async (id: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -109,4 +108,4 @@ export const getPaymentById = cache(async (id: string) => {
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data as PaymentRecord));
-});
+}

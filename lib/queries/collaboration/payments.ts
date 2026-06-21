@@ -3,10 +3,8 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { PaymentRecord, Invoice } from '@/types/invoice';
 import { Logger } from '@/lib/utils/logger';
 
-import { cache } from "react";
-
 // Get payments for an organization (accessible by members)
-export const getPaymentsForOrg = cache(async (orgId: string) => {
+export const getPaymentsForOrg = async (orgId: string) => {
   const supabase = await createAdminClient();
 
   const { data, error } = await supabase
@@ -21,7 +19,7 @@ export const getPaymentsForOrg = cache(async (orgId: string) => {
 
   Logger.info('GET_PAYMENTS_FOR_ORG', 'Payments fetched successfully for organization', { orgId, entityType: 'payments', details: { count: data.length } });
   return data as PaymentRecord[];
-});
+}
 
 // Record payment for an organization (accessible by members)
 export const recordPaymentForOrg = async (

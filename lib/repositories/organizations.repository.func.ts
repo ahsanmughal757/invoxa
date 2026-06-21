@@ -1,10 +1,9 @@
 "use server";
 
-import { cache } from "react";
 import { getSupabaseClient } from "./base.repository";
 import { Organization } from "@/types/invoice";
 
-export const getOrganizationById = cache(async (id: string) => {
+export const getOrganizationById = async (id: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -23,7 +22,7 @@ export const getOrganizationById = cache(async (id: string) => {
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data as Organization));
-});
+}
 
 export async function updateOrganization(id: string, orgData: any) {
   const supabase = await getSupabaseClient();
@@ -62,8 +61,8 @@ export async function createOrganization(orgData: any) {
   return JSON.parse(JSON.stringify(data));
 }
 
-export const getOrganizationsByOwnerId = cache(
-  async (ownerUserId: string | null | undefined) => {
+export const getOrganizationsByOwnerId = async (
+  ownerUserId: string | null | undefined) => {
     const supabase = await getSupabaseClient();
 
     if (!ownerUserId) {
@@ -82,11 +81,10 @@ export const getOrganizationsByOwnerId = cache(
 
     // Ensure the returned data is a plain object
     return data ? JSON.parse(JSON.stringify(data)) : null;
-  },
-);
+  }
 
-export const getMemberAssociatedOrganization = cache(
-  async (ownerUserId: string) => {
+export const getMemberAssociatedOrganization = async (
+  ownerUserId: string) => {
     const supabase = await getSupabaseClient();
 
     if (!ownerUserId) {
@@ -123,10 +121,9 @@ export const getMemberAssociatedOrganization = cache(
 
     // Ensure the returned data is a plain object
     return JSON.parse(JSON.stringify(data as Organization[]));
-  },
-);
+  }
 
-export const getProfileByUserId = cache(async (userId: string) => {
+export const getProfileByUserId = async (userId: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -141,4 +138,4 @@ export const getProfileByUserId = cache(async (userId: string) => {
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data));
-});
+}

@@ -1,9 +1,8 @@
 "use server";
 
-import { cache } from "react";
 import { getSupabaseClient } from "./base.repository";
 
-export const getMembersByOrgId = cache(async (orgId: string) => {
+export const getMembersByOrgId = async (orgId: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -21,9 +20,9 @@ export const getMembersByOrgId = cache(async (orgId: string) => {
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data));
-});
+}
 
-export const getMemberById = cache(async (id: string) => {
+export const getMemberById = async (id: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -42,7 +41,7 @@ export const getMemberById = cache(async (id: string) => {
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data));
-});
+}
 
 export async function createMember(memberData: any) {
   const supabase = await getSupabaseClient();
@@ -91,7 +90,7 @@ export async function deleteMember(id: string) {
   return { success: true };
 }
 
-export const getMemberByOrgAndUserId = cache(async (orgId: string, userId: string) => {
+export const getMemberByOrgAndUserId = async (orgId: string, userId: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -107,4 +106,4 @@ export const getMemberByOrgAndUserId = cache(async (orgId: string, userId: strin
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data));
-});
+}

@@ -1,14 +1,13 @@
 'use server';
 "use server";
 
-import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Client } from "@/types/invoice";
 import { Logger } from "@/lib/utils/logger";
 import { logClientActivity } from "@/lib/utils/activity-logger";
 
 // Get clients by organization ID
-export const getClientsByOrgId = cache(async (orgId: string) => {
+export const getClientsByOrgId = async (orgId: string) => {
   const supabase = await createAdminClient();
 
   const { data, error } = await supabase
@@ -27,7 +26,7 @@ export const getClientsByOrgId = cache(async (orgId: string) => {
     details: { count: data.length },
   });
   return data as Client[];
-});
+}
 
 // Create client
 export const createClient = async (

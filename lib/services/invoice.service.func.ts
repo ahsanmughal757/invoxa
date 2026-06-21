@@ -15,7 +15,6 @@ import {
 import { getOrganizationById } from "@/lib/repositories/organizations.repository.func";
 import { getPaymentsByInvoiceIds } from "@/lib/repositories/payments.repository.func";
 import { getPersonalExpenses } from "@/lib/repositories/personal/expenses.repository.func";
-import { cache } from "react";
 import { Invoice, InvoiceStructure } from "@/types/invoice";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Logger } from "../utils/logger";
@@ -135,8 +134,8 @@ export async function getInvoiceDashboardData(
 /**
  * Fetches dashboard statistics from the database view
  */
-export const getDashboardStats = cache(
-  async (orgId: string): Promise<DashboardStats> => {
+export const getDashboardStats = async (
+  orgId: string): Promise<DashboardStats> => {
     const supabase = await createAdminClient();
 
     const { data, error } = await supabase
@@ -186,14 +185,13 @@ export const getDashboardStats = cache(
     );
     // return data as DashboardStats;
     return data as any;
-  },
-);
+  }
 
 /**
  * Fetches invoice summary from the database view
  */
-export const getInvoiceSummary = cache(
-  async (orgId: string): Promise<InvoiceSummary[]> => {
+export const getInvoiceSummary = async (
+  orgId: string): Promise<InvoiceSummary[]> => {
     const supabase = await createAdminClient();
 
     if (!orgId) {
@@ -220,17 +218,15 @@ export const getInvoiceSummary = cache(
     console.log("Fetched invoice summary for orgId", orgId, ":", data);
 
     return data as InvoiceSummary[];
-  },
-);
+  }
 
 /**
  * Fetches a specific invoice with its items
  */
-export const getInvoiceWithItems = cache(
-  async (id: string): Promise<Invoice | null> => {
+export const getInvoiceWithItems = async (
+  id: string): Promise<Invoice | null> => {
     return await getInvoiceByIdWithItems(id);
-  },
-);
+  }
 
 /**
  * Creates a new invoice with associated items using a transactional approach

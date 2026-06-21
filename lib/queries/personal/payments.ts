@@ -1,12 +1,11 @@
 "use server";
 
-import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/server";
 import { PaymentRecord } from "@/types/invoice";
 import { Logger } from "@/lib/utils/logger";
 
 // Get personal payments for a user (both organization and personal payments)
-export const getPersonalPayments = cache(async (userId: string) => {
+export const getPersonalPayments = async (userId: string) => {
   const supabase = await createAdminClient();
 
   // First get the user's profile to get the profile ID
@@ -122,7 +121,7 @@ export const getPersonalPayments = cache(async (userId: string) => {
     },
   );
   return allPayments as PaymentRecord[];
-});
+}
 
 // Create a personal payment for a user
 export const createPersonalPayment = async (

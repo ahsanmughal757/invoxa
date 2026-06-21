@@ -1,6 +1,5 @@
 "use server";
 
-import { cache } from "react";
 import { getSupabaseClient } from "./base.repository";
 
 export async function createNotification(notificationData: any) {
@@ -20,7 +19,7 @@ export async function createNotification(notificationData: any) {
   return JSON.parse(JSON.stringify(data));
 }
 
-export const getNotificationsByUserId = cache(async (userId: string) => {
+export const getNotificationsByUserId = async (userId: string) => {
   const supabase = await getSupabaseClient();
 
   const { data, error } = await supabase
@@ -35,7 +34,7 @@ export const getNotificationsByUserId = cache(async (userId: string) => {
 
   // Ensure the returned data is a plain object
   return JSON.parse(JSON.stringify(data));
-});
+}
 
 export async function updateNotification(id: string, updates: any) {
   const supabase = await getSupabaseClient();

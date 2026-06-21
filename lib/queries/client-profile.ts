@@ -1,6 +1,5 @@
 "use server";
 
-import { cache } from "react";
 import { getClientsByOrgId } from "@/lib/queries/clients";
 import { getInvoicesByOrgId } from "@/lib/queries/invoices";
 import { getPaymentsByInvoiceIds } from "@/lib/queries/payments";
@@ -12,8 +11,8 @@ export interface ClientProfileData {
   payments: PaymentRecord[];
 }
 
-export const getClientProfileData = cache(
-  async (orgId: string, clientId: string): Promise<ClientProfileData> => {
+export const getClientProfileData = async (
+  orgId: string, clientId: string): Promise<ClientProfileData> => {
     // Get all clients for the organization
     const clients = await getClientsByOrgId(orgId);
     const client = clients.find((c) => c.id === clientId);
@@ -38,5 +37,4 @@ export const getClientProfileData = cache(
       invoices: clientInvoices,
       payments,
     };
-  },
-);
+  }

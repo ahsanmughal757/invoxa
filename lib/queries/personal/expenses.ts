@@ -1,13 +1,11 @@
-"use server"
 "use server";
 
-import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/server";
 import { Expense } from "@/types/invoice";
 import { Logger } from "@/lib/utils/logger";
 
 // Get personal expenses for a user (not tied to an organization)
-export const getPersonalExpenses = cache(async (userId: string) => {
+export const getPersonalExpenses = async (userId: string) => {
   const supabase = await createAdminClient();
 
   // First get the user's profile to get the profile ID
@@ -53,7 +51,7 @@ export const getPersonalExpenses = cache(async (userId: string) => {
     },
   );
   return data as Expense[];
-});
+}
 
 // Create a personal expense for a user
 export const createPersonalExpense = async (
