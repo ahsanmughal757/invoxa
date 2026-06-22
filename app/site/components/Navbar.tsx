@@ -11,6 +11,11 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 
+type NavLinkType = {
+  name: string;
+  href: string;
+};
+
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -24,7 +29,7 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks: any = [
+  const navLinks: NavLinkType[] = [
     // { name: "Features", href: "#features" },
     // { name: "Platform", href: "#platform" },
     // { name: "Team", href: "#team" },
