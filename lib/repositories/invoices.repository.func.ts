@@ -143,209 +143,126 @@ export async function createInvoiceItems(itemsData: any[]) {
   return JSON.parse(JSON.stringify(insertedItems as InvoiceItem[]));
 }
 
-// BE VERY CAREFUL TO CHANGE ITS A COMPLEX WORKAROUND UPDATE LOGIC
+async function rollbackInvoice(
+  supabase: any,
+  invoiceId: string,
+  invoiceSnapshot: any,
+  itemsSnapshot: any[],
+): Promise<void> {
+  const { error: delErr } = await supabase
+    .from("invoices")
+    .delete()
+    .eq("id", invoiceId);
+
+  if (delErr) {
+    Logger.error("ROLLBACK", "Failed to delete partially-updated invoice", delErr);
+  }
+
+  const { error: insInvErr } = await supabase
+    .from("invoices")
+    .insert(invoiceSnapshot);
+
+  if (insInvErr) {
+    Logger.error("ROLLBACK", "CRITICAL: Failed to restore invoice snapshot", insInvErr);
+    throw new Error(
+      "Update failed and rollback could not restore the invoice. Database may be inconsistent.",
+    );
+  }
+
+  if (itemsSnapshot.length > 0) {
+    const { error: insItemsErr } = await supabase
+      .from("invoice_items")
+      .insert(itemsSnapshot);
+
+    if (insItemsErr) {
+      Logger.error("ROLLBACK", "CRITICAL: Failed to restore invoice items snapshot", insItemsErr);
+      throw new Error(
+        "Update failed and rollback could not restore invoice items. Database may be inconsistent.",
+      );
+    }
+  }
+}
+
 export async function updateInvoice(
   invoiceId: string,
   updates: Partial<InvoiceStructure>,
-) {
-  let _invoiceSwapMem = null;
-  let _invoiceItemsSwapMem = null;
-
+): Promise<InvoiceStructure> {
   const supabase = await getSupabaseClient();
 
-  // Save the previous state of invoice here
-  const { data: tempInv, error: tempInvError } = await supabase
+  // ── Phase 1: Snapshot existing state ──────────────────────────
+  const { data: invoiceSnapshot, error: snapErr } = await supabase
     .from("invoices")
     .select("*")
     .eq("id", invoiceId)
     .single();
 
-  if (tempInvError) {
-    Logger.error(
-      "UPDATE_INVOICE",
-      `Error fetching invoice: ${invoiceId}`,
-      tempInvError,
-    );
-    throw tempInvError;
+  if (snapErr) {
+    Logger.error("UPDATE_INVOICE", `Error fetching invoice: ${invoiceId}`, snapErr);
+    throw snapErr;
   }
 
-  _invoiceSwapMem = tempInv;
-
-  const { data: tempInvItems, error: tempInvItemsError } = await supabase
+  const { data: itemsSnapshot, error: itemsSnapErr } = await supabase
     .from("invoice_items")
     .select("*")
     .eq("invoice_id", invoiceId);
 
-  if (tempInvItemsError) {
-    Logger.error(
-      "UPDATE_INVOICE",
-      `Error fetching invoice items for invoice: ${invoiceId}`,
-      tempInvItemsError,
-    );
-    throw tempInvItemsError;
+  if (itemsSnapErr) {
+    Logger.error("UPDATE_INVOICE", `Error fetching items for invoice: ${invoiceId}`, itemsSnapErr);
+    throw itemsSnapErr;
   }
 
-  _invoiceItemsSwapMem = tempInvItems;
+  // ── Phase 2: Prepare — strip computed/payment fields ──────────
+  const {
+    invoice_items,
+    tax_amount,
+    total,
+    paid_amount,
+    ...invoiceFields
+  } = updates;
 
-  if (!_invoiceSwapMem || !_invoiceItemsSwapMem) {
-    Logger.error(
-      "UPDATE_INVOICE",
-      `No invoice with id:${invoiceId} o)r related invoice items found`,
-      {},
-    );
-    throw new Error("No invoice or related invoice items found");
-  }
-
-  // Delete the old invoice
-  // await supabase.from('invoices').delete().eq('id', )
-
-  // Invoice without invoice_items property
-  const { invoice_items, tax_amount, total, ..._inv } = updates;
-
-  const { data: invoiceData, error: invoiceError } = await supabase
-    .from("invoices")
-    .update(_inv)
-    .eq("id", invoiceId)
-    .select("*")
-    .single();
-
-  if (invoiceError) {
-    Logger.error("UPDATE_INVOICE", "Error Updating Invoice", invoiceError);
-    throw invoiceError;
-  }
-
-  console.log("updates.invoice_items: ", updates.invoice_items);
-  const invItemsToUpdate = (updates.invoice_items?.filter((item) => {
-    return item.invoice_id && item.id; // already existing line_item
-  })) ?? [];
-
-  const l_ItemsToUpdateCleaned = invItemsToUpdate.map((item) => {
-    const { id, invoice_id, line_total, ..._item } = item;
-    return {
-      ..._item,
-    };
-  });
-
-  const invItemsToInsert = (updates.invoice_items?.filter(
-    (item) => !item.invoice_id || !item.id,
-  )) ?? [];
-
-  const l_ItemstoInsertCleaned = invItemsToInsert.map((item) => {
-    const { id, line_total, ..._item } = item;
-    return {
-      ..._item,
-      invoice_id: invoiceId, // As it still belongs to a certain invoice
-    };
-  });
-
-  const { data: l_ItemsToUpdate, error: l_ItemsToUpdateError } = await supabase
-    .from("invoice_items")
-    .update(l_ItemsToUpdateCleaned)
-    .eq("invoice_id", invoiceId)
-    .select("*");
-
-  if (l_ItemsToUpdateError) {
-    Logger.error(
-      "UPDATE_INVOICE",
-      "Error updating the already existing invoice items",
-      l_ItemsToUpdateError,
-    );
-
-    // -------------------------------------------------------
-    // Incase of failure rollback the 'invoices' table commit
-    // -------------------------------------------------------
-
-    // Delete the half updated invoice
-    const { data: deleteInv, error: deleteInvError } = await supabase
+  // ── Phase 3: Execute ──────────────────────────────────────────
+  try {
+    const { error: updateErr } = await supabase
       .from("invoices")
-      .delete()
-      .eq("id", invoiceId);
+      .update(invoiceFields)
+      .eq("id", invoiceId)
+      .select("*")
+      .single();
 
-    if (deleteInvError) {
-      Logger.error(
-        "UPDATE_INVOICE",
-        "Error during rollback invoice",
-        deleteInvError,
-      );
+    if (updateErr) throw updateErr;
+
+    if (invoice_items !== undefined) {
+      const { error: deleteErr } = await supabase
+        .from("invoice_items")
+        .delete()
+        .eq("invoice_id", invoiceId);
+
+      if (deleteErr) throw deleteErr;
+
+      if (invoice_items.length > 0) {
+        const newItems = invoice_items.map((item) => {
+          const { id, line_total, ...rest } = item;
+          return { ...rest, invoice_id: invoiceId };
+        });
+
+        const { error: insertErr } = await supabase
+          .from("invoice_items")
+          .insert(newItems);
+
+        if (insertErr) throw insertErr;
+      }
     }
 
-    const { data: insertedInvoice, error: insertedInvoiceError } =
-      await supabase.from("invoices").insert(tempInv).single();
-
-    if (insertedInvoiceError) {
-      Logger.error(
-        "UPDATE_INVOICE",
-        "Error inserting the swap mem invoice",
-        insertedInvoiceError,
-      );
-      throw insertedInvoiceError;
+    // ── Fetch and return final result ─────────────────────────
+    const result = await getInvoiceByIdWithItems(invoiceId);
+    return JSON.parse(JSON.stringify(result));
+  } catch (error) {
+    // ── Phase 4: Rollback on failure after invoice update ────
+    if (error !== snapErr && error !== itemsSnapErr) {
+      await rollbackInvoice(supabase, invoiceId, invoiceSnapshot, itemsSnapshot);
     }
-
-    throw l_ItemsToUpdateError;
+    throw error;
   }
-
-  const { data: l_ItemstoInsert, error: l_ItemstoInsertError } = await supabase
-    .from("invoice_items")
-    .insert(l_ItemstoInsertCleaned)
-    .select("*");
-
-  if (l_ItemstoInsertError) {
-    Logger.error(
-      "UPDATE_INVOICE",
-      "Error inserting new line items",
-      l_ItemstoInsertError,
-    );
-
-    // -------------------------------------------------------
-    // Incase of failure rollback the 'invoices' table commit
-    // -------------------------------------------------------
-
-    // Delete the half updated invoice
-    const { data: deleteInv, error: deleteInvError } = await supabase
-      .from("invoices")
-      .delete()
-      .eq("id", invoiceId);
-
-    if (deleteInvError) {
-      Logger.error(
-        "UPDATE_INVOICE",
-        "Error during rollback invoice",
-        deleteInvError,
-      );
-    }
-
-    const { data: insertedInvoice, error: insertedInvoiceError } =
-      await supabase.from("invoices").insert(tempInv).single();
-
-    if (insertedInvoiceError) {
-      Logger.error(
-        "UPDATE_INVOICE",
-        "Error inserting the swap mem invoice",
-        insertedInvoiceError,
-      );
-      throw insertedInvoiceError;
-    }
-
-    throw l_ItemstoInsertError;
-  }
-
-  Logger.success("UPDATE_INVOICE", "Invoice Updated", {
-    details: {
-      invoiceId: invoiceId,
-      updates,
-    },
-  });
-
-  let cleanedData: InvoiceStructure | null = null;
-  const allInvItems = [...l_ItemsToUpdate, ...l_ItemstoInsert];
-
-  cleanedData = {
-    ...invoiceData,
-    invoice_items: allInvItems,
-  };
-
-  // Ensure the returned data is a plain object
-  return JSON.parse(JSON.stringify(cleanedData));
 }
 
 export async function deleteInvoice(id: string) {
