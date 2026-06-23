@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/ui/back-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -207,15 +208,18 @@ export default function ClientsCollaborationPage() {
             Manage clients for your organization
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setEditingClient(null);
-            setIsCreating(true);
-          }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Client
-        </Button>
+        <div className="flex items-center gap-2">
+          <BackButton href={`/organization/${orgId}/collaboration`}>Back to Collaboration Dashboard</BackButton>
+          <Button
+            onClick={() => {
+              setEditingClient(null);
+              setIsCreating(true);
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Client
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">

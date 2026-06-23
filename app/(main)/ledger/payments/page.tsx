@@ -3,6 +3,7 @@
 import { LedgerView } from "@/components/payments/ledger-view";
 import { FEATURES } from "@/hooks/use-subscription-access";
 import { SubscriptionGuard } from "@/components/subscription/subscription-guard";
+import { BackButton } from "@/components/ui/back-button";
 import { useInvoices } from "@/hooks/use-invoices";
 import { CreditCard } from "lucide-react";
 import { usePayments } from "@/hooks/use-payments";
@@ -85,6 +86,7 @@ export default function PaymentsLedgerPage() {
                 into {organization?.name || "your organization"})
               </p>
             </div>
+            <BackButton href="/payments">Back to Payments</BackButton>
           </div>
 
           <LedgerView

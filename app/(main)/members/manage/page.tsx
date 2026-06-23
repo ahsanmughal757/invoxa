@@ -27,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { BackButton } from "@/components/ui/back-button";
 import { InviteMemberModal } from "@/components/members/invite-member-modal";
 import { RemoveMemberModal } from "@/components/members/remove-member-modal";
 import { RoleIndicator } from "@/components/ui/role-indicator";
@@ -224,10 +225,13 @@ export default function MembersManagementPage() {
             Invite team members and manage their roles
           </p>
         </div>
-        <Button onClick={() => setInviteModalOpen(true)}>
-          <UserPlus className="h-4 w-4 mr-2" />
-          Invite Member
-        </Button>
+        <div className="flex items-center gap-2">
+          <BackButton href="/members">Back to Members</BackButton>
+          <Button onClick={() => setInviteModalOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Invite Member
+          </Button>
+        </div>
       </div>
 
       <Card>

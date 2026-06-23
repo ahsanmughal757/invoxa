@@ -5,6 +5,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useOrganization } from "@/hooks/use-organization";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/ui/back-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -202,20 +203,22 @@ export default function OrganizationSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Organization Settings
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Manage your organization profile and membership
-        </p>
-      </div>
-
-      <div className="flex justify-end">
-        <Button onClick={() => router.push("organization/create")}>
-          <Plus size={"h-4 w-4 mr-2"} />
-          Create New
-        </Button>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Organization Settings
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Manage your organization profile and membership
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <BackButton href="/settings">Back to Settings</BackButton>
+          <Button onClick={() => router.push("organization/create")}>
+            <Plus size={"h-4 w-4 mr-2"} />
+            Create New
+          </Button>
+        </div>
       </div>
 
       {/* Your Organization List */}

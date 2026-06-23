@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/ui/back-button";
 import {
   Table,
   TableBody,
@@ -144,25 +145,28 @@ export default function ClientProfileClient({
           <h1 className="text-3xl font-bold text-gray-900">{client.name}</h1>
           <p className="text-gray-600 mt-1">Client Profile & Financial Hub</p>
         </div>
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Client
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Edit Client</DialogTitle>
-            </DialogHeader>
-            <ClientEditForm
-              client={client}
-              onSave={handleUpdateClient}
-              onCancel={() => setIsEditDialogOpen(false)}
-              isSubmitting={isUpdating}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-2">
+          <BackButton href="/clients">Back to Clients</BackButton>
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Client
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Edit Client</DialogTitle>
+              </DialogHeader>
+              <ClientEditForm
+                client={client}
+                onSave={handleUpdateClient}
+                onCancel={() => setIsEditDialogOpen(false)}
+                isSubmitting={isUpdating}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Financial Summary Cards */}

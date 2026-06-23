@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { BackButton } from '@/components/ui/back-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -150,11 +151,7 @@ export default function InvoiceDetailPage() {
           >
             Edit Invoice
           </Button>
-          <Button
-            onClick={() => router.push('/invoices')}
-          >
-            Back to Invoices
-          </Button>
+          <BackButton href="/invoices">Back to Invoices</BackButton>
         </div>
       </div>
 

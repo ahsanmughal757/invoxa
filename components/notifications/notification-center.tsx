@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/utils'
+import { BackButton } from '@/components/ui/back-button'
 import { Bell, Check, X, AlertCircle, DollarSign, Calendar, Settings } from 'lucide-react'
 
 interface NotificationCenterProps {
@@ -68,6 +69,7 @@ export function NotificationCenter({
           )}
         </h1>
         <div className="flex items-center gap-2">
+          <BackButton href="/dashboard">Back to Dashboard</BackButton>
           <Button
             variant={filter === 'all' ? 'default' : 'outline'}
             size="sm"

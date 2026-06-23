@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/ui/back-button";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Invoice, Client } from "@/types/invoice";
@@ -143,9 +144,7 @@ export default function CreateInvoicePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Create Invoice</h1>
-        <Button variant="outline" onClick={() => router.push("/invoices")}>
-          Back to Invoices
-        </Button>
+        <BackButton href="/invoices">Back to Invoices</BackButton>
       </div>
       <RequiredDataGuard
         // check={() => !!organization?.name}

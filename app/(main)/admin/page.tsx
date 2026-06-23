@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react';
+import { BackButton } from '@/components/ui/back-button';
 import { useInvoiceContext } from '@/context/InvoiceContext';
 import { SystemAdministration } from '@/components/admin/system-administration';
 import { SuperuserLogin } from '@/components/admin/superuser-login';
@@ -153,19 +154,25 @@ export default function AdminPage() {
   };
 
   return (
-    <SystemAdministration
-      systemSettings={systemSettings}
-      onUpdateSystemSettings={handleUpdateSystemSettings}
-      onUpdateLicenseInfo={handleUpdateLicenseInfo}
-      onUpdateSupportContact={handleUpdateSupportContact}
-      onAddSupportContact={handleAddSupportContact}
-      onRemoveSupportContact={handleRemoveSupportContact}
-      subscriptions={subscriptions}
-      onCreateSubscription={handleCreateSubscription}
-      onUpdateSubscription={handleUpdateSubscription}
-      onCancelSubscription={handleCancelSubscription}
-      onCreateTrial={handleCreateTrial}
-      onUpdateTrialSettings={handleUpdateTrialSettings}
-    />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-900">System Administration</h1>
+        <BackButton href="/dashboard">Back to Dashboard</BackButton>
+      </div>
+      <SystemAdministration
+        systemSettings={systemSettings}
+        onUpdateSystemSettings={handleUpdateSystemSettings}
+        onUpdateLicenseInfo={handleUpdateLicenseInfo}
+        onUpdateSupportContact={handleUpdateSupportContact}
+        onAddSupportContact={handleAddSupportContact}
+        onRemoveSupportContact={handleRemoveSupportContact}
+        subscriptions={subscriptions}
+        onCreateSubscription={handleCreateSubscription}
+        onUpdateSubscription={handleUpdateSubscription}
+        onCancelSubscription={handleCancelSubscription}
+        onCreateTrial={handleCreateTrial}
+        onUpdateTrialSettings={handleUpdateTrialSettings}
+      />
+    </div>
   );
 }

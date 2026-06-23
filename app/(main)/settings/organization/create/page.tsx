@@ -3,7 +3,7 @@
 import { useInvoiceContext } from "@/context/InvoiceContext";
 import { useAuth } from "@clerk/nextjs";
 import { CompanySettings } from "@/components/settings/company-settings";
-import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/ui/back-button";
 import { useRouter } from "next/navigation";
 import { Organization, Company } from "@/types/invoice";
 import { useOrganization } from "@/hooks/use-organization";
@@ -89,9 +89,7 @@ export default function CreateOrganizationPage() {
             Configure your company information to appear on all invoices
           </p>
         </div>
-        <Button variant="outline" onClick={() => router.push("/settings")}>
-          Back to Settings
-        </Button>
+        <BackButton href="/settings">Back to Settings</BackButton>
       </div>
       {/*<CompanySettings company={cleanedCompany} onSave={handleSaveCompany} />*/}
       <CompanySettings company={null} onSave={handleSaveCompany} />
