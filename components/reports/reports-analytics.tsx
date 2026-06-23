@@ -116,9 +116,10 @@ export function ReportsAnalytics({ invoices, payments, expenses, clients, loadin
       // Use the computed status from DB instead of client-side calculation
       const computedStatus = invoice.computed_status || invoice.status;
       if (computedStatus === 'paid') {
-        const client = clients.find(client => client.id === invoice.client_id);
-        if (client) {
-          clientRevenue[client.name] = (clientRevenue[client.name] || 0) + invoice.total;
+        const clientName = invoice.additional_info?.temp_client?.name ||
+          clients.find(client => client.id === invoice.client_id)?.name;
+        if (clientName) {
+          clientRevenue[clientName] = (clientRevenue[clientName] || 0) + invoice.total;
         }
       }
     })

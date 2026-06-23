@@ -79,10 +79,39 @@ export default function EditInvoicePage() {
     }
   }, [invoiceId, invoices, router]);
 
-  const handleSaveInvoice = async (invoiceData: InvoiceStructure) => {
+  const handleSaveInvoice = async (
+    invoiceData: InvoiceStructure,
+    temporaryClient?: any,
+  ) => {
     try {
       if (selectedInvoice) {
-        await updateInvoice(selectedInvoice.id, invoiceData);
+        let updates: Partial<InvoiceStructure> = { ...invoiceData };
+
+        if (temporaryClient) {
+          if (!organization?.id) throw new Error("Organization ID is required");
+
+          const { getOrCreatePlaceholderClientAction } = await import(
+            "@/lib/actions/client.actions"
+          );
+          const result = await getOrCreatePlaceholderClientAction(
+            organization.id,
+          );
+          if (!result.success || !result.data) {
+            throw new Error(result.error || "Failed to get placeholder client");
+          }
+
+          updates.client_id = result.data.id;
+          updates.additional_info = {
+            temp_client: {
+              name: temporaryClient.name,
+              email: temporaryClient.email || "",
+              phone: temporaryClient.phone || "",
+              billing_address: temporaryClient.billing_address || {},
+            },
+          };
+        }
+
+        await updateInvoice(selectedInvoice.id, updates);
         toast.success("Invoice Updated");
         router.push("/invoices");
       }
@@ -136,25 +165,37 @@ export default function EditInvoicePage() {
           </DialogHeader>
           {previewInvoice &&
             selectedInvoice &&
-            // Find the client for the preview
             (() => {
-              const client = clients.find(
+              const mergedInvoice = {
+                ...selectedInvoice,
+                ...previewInvoice,
+              } as Invoice;
+              const base = clients.find(
                 (c) =>
                   c.id ===
                   (previewInvoice.client_id || selectedInvoice.client_id),
               );
-              return client ? (
+              let displayClient: Client | null = base || null;
+
+              if (mergedInvoice.additional_info?.temp_client) {
+                const tc = mergedInvoice.additional_info.temp_client;
+                displayClient = {
+                  id: base?.id || "",
+                  org_id: base?.org_id || "",
+                  name: tc.name,
+                  email: tc.email || base?.email || "",
+                  phone: tc.phone || base?.phone || "",
+                  billing_address: tc.billing_address || base?.billing_address,
+                  created_at: base?.created_at || new Date().toISOString(),
+                } as Client;
+              }
+
+              return displayClient ? (
                 <InvoicePreview
-                  invoice={
-                    {
-                      ...selectedInvoice,
-                      ...previewInvoice,
-                    } as Invoice
-                  }
-                  client={client}
+                  invoice={mergedInvoice}
+                  client={displayClient}
                   organization={organization}
                   onSend={() => {
-                    // This is now handled by the trigger and real-time system
                     setIsPreviewOpen(false);
                   }}
                 />

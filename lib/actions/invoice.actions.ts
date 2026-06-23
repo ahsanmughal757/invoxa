@@ -26,6 +26,7 @@ export interface InvoiceData {
   currency: string;
   status: string;
   notes?: string;
+  additional_info?: Record<string, any>;
   items?: Array<{
     description: string;
     quantity: number;

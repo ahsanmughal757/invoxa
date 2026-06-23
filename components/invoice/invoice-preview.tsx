@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from 'react'
 import { Invoice, Client, Organization } from '@/types/invoice'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -32,9 +33,21 @@ export function InvoicePreview({
     onPrint?.()
   }
 
+  const resolvedClient = useMemo(() => {
+    const tc = (invoice as Invoice).additional_info?.temp_client
+    if (!tc) return client
+    return {
+      ...client,
+      name: tc.name,
+      email: tc.email || client.email,
+      phone: tc.phone || client.phone,
+      billing_address: tc.billing_address || client.billing_address,
+    }
+  }, [invoice, client])
+
   // Validate data before rendering
   const isValidInvoice = validateInvoiceData(invoice as Invoice);
-  const isValidClient = validateClientData(client);
+  const isValidClient = validateClientData(resolvedClient);
 
   if (!isValidInvoice || !isValidClient) {
     return (
@@ -76,7 +89,7 @@ export function InvoicePreview({
       <TemplateRenderer
         templateId={templateId}
         invoice={invoice as Invoice}
-        client={client}
+        client={resolvedClient}
         organization={organization}
       />
     </div>

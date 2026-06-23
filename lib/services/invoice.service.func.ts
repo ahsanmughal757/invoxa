@@ -229,7 +229,14 @@ export const getInvoiceSummary = async (
       throw new Error(`Failed to load invoice summary: ${error.message}`);
     }
 
-    console.log("Fetched invoice summary for orgId", orgId, ":", data);
+    if (data) {
+      for (const row of data) {
+        const tempClient = (row as any).additional_info?.temp_client;
+        if (tempClient?.name) {
+          (row as any).client_name = tempClient.name;
+        }
+      }
+    }
 
     return data as InvoiceSummary[];
   }

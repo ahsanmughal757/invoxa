@@ -191,6 +191,26 @@ export function InvoiceForm({
   const watchedTemplateId = watch("template_id");
 
   useEffect(() => {
+    if (invoice?.additional_info?.temp_client) {
+      const tc = invoice.additional_info.temp_client;
+      setValue("client_id", "temporary");
+      setValue("temporary_client", {
+        name: tc.name || "",
+        email: tc.email || "",
+        phone: tc.phone || "",
+        billing_address: {
+          street: tc.billing_address?.street || "",
+          city: tc.billing_address?.city || "",
+          state: tc.billing_address?.state || "",
+          postal_code: tc.billing_address?.postal_code || "",
+          country: tc.billing_address?.country || "",
+        },
+      });
+      setIsTemporaryClient(true);
+    }
+  }, []);
+
+  useEffect(() => {
     if (watchedClientId === "temporary") {
       setIsTemporaryClient(true);
       setSelectedClient(null);

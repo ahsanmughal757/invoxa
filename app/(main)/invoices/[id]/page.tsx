@@ -176,33 +176,43 @@ export default function InvoiceDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {client ? (
+              {(invoice.additional_info?.temp_client || client) ? (
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-lg">{client.name}</h3>
-                  <div className="flex items-center text-gray-600">
-                    <Mail className="h-4 w-4 mr-2" />
-                    {client.email}
-                  </div>
-                  {client.phone && (
+                  <h3 className="font-semibold text-lg">
+                    {invoice.additional_info?.temp_client?.name || client?.name}
+                  </h3>
+                  {(invoice.additional_info?.temp_client?.email || client?.email) && (
+                    <div className="flex items-center text-gray-600">
+                      <Mail className="h-4 w-4 mr-2" />
+                      {invoice.additional_info?.temp_client?.email || client?.email}
+                    </div>
+                  )}
+                  {(invoice.additional_info?.temp_client?.phone || client?.phone) && (
                     <div className="flex items-center text-gray-600">
                       <Phone className="h-4 w-4 mr-2" />
-                      {client.phone}
+                      {invoice.additional_info?.temp_client?.phone || client?.phone}
                     </div>
                   )}
-                  {client.billing_address && (
-                    <div className="flex items-start text-gray-600 mt-2">
-                      <MapPin className="h-4 w-4 mr-2 mt-0.5" />
-                      <div>
-                        {client.billing_address.street && <div>{client.billing_address.street}</div>}
-                        <div>
-                          {client.billing_address.city && `${client.billing_address.city}, `}
-                          {client.billing_address.state && `${client.billing_address.state} `}
-                          {client.billing_address.postal_code && client.billing_address.postal_code}
+                  {(() => {
+                    const addr = invoice.additional_info?.temp_client?.billing_address || client?.billing_address;
+                    if (addr && (addr.street || addr.city || addr.state || addr.country)) {
+                      return (
+                        <div className="flex items-start text-gray-600 mt-2">
+                          <MapPin className="h-4 w-4 mr-2 mt-0.5" />
+                          <div>
+                            {addr.street && <div>{addr.street}</div>}
+                            <div>
+                              {addr.city && `${addr.city}, `}
+                              {addr.state && `${addr.state} `}
+                              {addr.postal_code && addr.postal_code}
+                            </div>
+                            {addr.country && <div>{addr.country}</div>}
+                          </div>
                         </div>
-                        {client.billing_address.country && <div>{client.billing_address.country}</div>}
-                      </div>
-                    </div>
-                  )}
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
               ) : (
                 <p className="text-gray-500">Client information not available</p>
@@ -365,10 +375,25 @@ export default function InvoiceDetailPage() {
           <DialogHeader>
             <DialogTitle className='print:hidden'>Invoice Preview</DialogTitle>
           </DialogHeader>
-          {invoice && client && (
+          {invoice && (
             <InvoicePreview
               invoice={invoice}
-              client={client}
+              client={(() => {
+                if (invoice.additional_info?.temp_client) {
+                  const tc = invoice.additional_info.temp_client;
+                  return {
+                    ...(client || {}),
+                    id: client?.id || "",
+                    org_id: client?.org_id || "",
+                    name: tc.name,
+                    email: tc.email || client?.email || "",
+                    phone: tc.phone || client?.phone || "",
+                    billing_address: tc.billing_address || client?.billing_address,
+                    created_at: client?.created_at || new Date().toISOString(),
+                  } as Client;
+                }
+                return client as Client;
+              })()}
               organization={organization}
               templateId={invoice.template_id as TemplateId || 'classic_business'}
               onSend={() => {

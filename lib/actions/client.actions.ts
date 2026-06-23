@@ -21,6 +21,7 @@ import {
 import { getMemberAssociatedOrganization } from "../queries/organizations";
 import { Organization, OrganizationMember } from "@/types/invoice";
 import { CACHE_TAGS } from "@/lib/cache-tags";
+import { createAdminClient } from "@/lib/supabase/server";
 
 export interface ClientData {
   name: string;
@@ -401,6 +402,50 @@ export async function createClientForMemberOrganizationAction(
       userId,
       orgId: currentOrgId,
     });
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+export async function getOrCreatePlaceholderClientAction(orgId: string) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const supabase = await createAdminClient();
+
+    const { data: existing } = await supabase
+      .from("clients")
+      .select("id")
+      .eq("org_id", orgId)
+      .eq("notes", "__TEMP_PLACEHOLDER__")
+      .maybeSingle();
+
+    if (existing) return { success: true, data: { id: existing.id } };
+
+    const { data: newClient, error } = await supabase
+      .from("clients")
+      .insert({
+        org_id: orgId,
+        name: "Temporary Client",
+        email: "",
+        phone: "",
+        billing_address: {},
+        notes: "__TEMP_PLACEHOLDER__",
+        currency: "USD",
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
+
+    return { success: true, data: { id: newClient.id } };
+  } catch (error) {
+    Logger.error(
+      "GET_OR_CREATE_PLACEHOLDER_CLIENT",
+      "Failed to get or create placeholder client",
+      error,
+      { details: { orgId } },
+    );
     return { success: false, error: (error as Error).message };
   }
 }

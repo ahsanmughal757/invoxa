@@ -37,7 +37,22 @@ export interface Invoice {
   created_at: string; // ISO 8601 datetime string
   updated_at: string; // ISO 8601 datetime string
   invoice_items: InvoiceItem[];
-  template_id?: string; // Added for template selection
+  template_id?: string;
+  additional_info?: {
+    temp_client?: {
+      name: string;
+      email?: string;
+      phone?: string;
+      billing_address?: {
+        street?: string;
+        city?: string;
+        state?: string;
+        postal_code?: string;
+        country?: string;
+      };
+    };
+    [key: string]: any;
+  };
 }
 
 export interface InvoiceStructure extends Invoice {

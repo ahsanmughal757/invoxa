@@ -19,6 +19,7 @@ import { Invoice, Client } from "@/types/invoice";
 import { RequiredDataGuard } from "@/components/guards/RequiredDataGuard";
 import { ClientGuard } from "@/components/guards/client-guard";
 import { useClients } from "@/hooks/use-clients";
+import { getOrCreatePlaceholderClientAction } from "@/lib/actions/client.actions";
 import { useOrganization } from "@/hooks/use-organization";
 import {
   LoadingState,
@@ -51,24 +52,33 @@ export default function CreateInvoicePage() {
     temporaryClient?: any,
   ) => {
     try {
-      let finalInvoiceData = { ...invoiceData, status: "draft" as const };
+      let finalInvoiceData: Partial<Invoice> = {
+        ...invoiceData,
+        status: "draft" as const,
+      };
 
-      // If temporary client data is provided, create the client first
       if (temporaryClient) {
-        const newClient = await createClient({
-          name: temporaryClient.name,
-          email: temporaryClient.email || "",
-          phone: temporaryClient.phone || "",
-          billing_address: temporaryClient.billing_address || {},
-          notes: "Temporary client created for invoice",
-        });
+        if (!organization?.id) throw new Error("Organization ID is required");
+
+        const result = await getOrCreatePlaceholderClientAction(organization.id);
+        if (!result.success || !result.data) {
+          throw new Error(result.error || "Failed to get placeholder client");
+        }
+
         finalInvoiceData = {
           ...finalInvoiceData,
-          client_id: newClient && newClient.id,
+          client_id: result.data.id,
+          additional_info: {
+            temp_client: {
+              name: temporaryClient.name,
+              email: temporaryClient.email || "",
+              phone: temporaryClient.phone || "",
+              billing_address: temporaryClient.billing_address || {},
+            },
+          },
         };
       }
 
-      // Ensure we have a client_id
       if (!finalInvoiceData.client_id) {
         throw new Error("Client ID is required");
       }
@@ -80,12 +90,6 @@ export default function CreateInvoicePage() {
       }
     } catch (error) {
       console.error("Failed to save invoice:", error);
-      // Show user-friendly error message
-      // addNotification({
-      //   type: 'system',
-      //   title: 'Save Failed',
-      //   message: 'Unable to save invoice. Please check your data and try again.',
-      // });
     }
   };
 

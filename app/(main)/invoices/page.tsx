@@ -186,18 +186,30 @@ export default function InvoicesPage() {
               {previewInvoice && (
                 <InvoicePreview
                   invoice={previewInvoice}
-                  client={
-                    clients.find((c) => c.id === previewInvoice.client_id) ||
-                    (clients.length > 0
-                      ? clients[0]
-                      : ({ id: "", name: "Unknown Client" } as Client))
-                  }
+                  client={(() => {
+                    if (previewInvoice.additional_info?.temp_client) {
+                      const tc = previewInvoice.additional_info.temp_client;
+                      const base = clients.find((c) => c.id === previewInvoice.client_id);
+                      return {
+                        id: base?.id || "",
+                        org_id: base?.org_id || "",
+                        name: tc.name,
+                        email: tc.email || base?.email || "",
+                        phone: tc.phone || base?.phone || "",
+                        billing_address: tc.billing_address || base?.billing_address,
+                        created_at: base?.created_at || new Date().toISOString(),
+                      } as Client;
+                    }
+                    return (
+                      clients.find((c) => c.id === previewInvoice.client_id) ||
+                      ({ id: "", name: "Unknown Client" } as Client)
+                    );
+                  })()}
                   organization={organization}
                   templateId={
                     (previewInvoice.template_id as any) || "classic_business"
-                  } // Use the invoice's template or default
+                  }
                   onSend={() => {
-                    // This is now handled by the trigger and real-time system
                     setIsPreviewOpen(false);
                   }}
                 />

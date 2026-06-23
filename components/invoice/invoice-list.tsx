@@ -201,8 +201,11 @@ export function InvoiceList({
 
   // Ready State - Process and display invoices
   if (isReady) {
-    const getClientName = (clientId: string) => {
-      return clients.find(c => c.id === clientId)?.name || 'Unknown Client';
+    const getClientName = (invoice: any) => {
+      if (invoice.additional_info?.temp_client?.name) {
+        return invoice.additional_info.temp_client.name;
+      }
+      return clients.find(c => c.id === invoice.client_id)?.name || 'Unknown Client';
     }
 
     // Helper function to get invoice status (prefer DB-computed if available)
@@ -213,7 +216,7 @@ export function InvoiceList({
 
     const filteredInvoices = invoices
       .filter(invoice => {
-        const clientName = getClientName(invoice.client_id).toLowerCase();
+        const clientName = getClientName(invoice).toLowerCase();
         const matchesSearch =
           clientName.includes(searchTerm.toLowerCase()) ||
           invoice.number.toLowerCase().includes(searchTerm.toLowerCase())
@@ -232,8 +235,8 @@ export function InvoiceList({
 
         switch (sortBy) {
           case 'client':
-            const clientA = getClientName(a.client_id).toLowerCase();
-            const clientB = getClientName(b.client_id).toLowerCase();
+            const clientA = getClientName(a).toLowerCase();
+            const clientB = getClientName(b).toLowerCase();
             comparison = clientA.localeCompare(clientB);
             break;
           case 'number':
@@ -461,7 +464,7 @@ export function InvoiceList({
 
                         return (
                           <TableRow key={invoice.id}>
-                            <TableCell className="font-medium">{getClientName(invoice.client_id)}</TableCell>
+                            <TableCell className="font-medium">{getClientName(invoice)}</TableCell>
                             <TableCell>{invoice.number}</TableCell>
                             <TableCell>{formatDate(new Date(invoice.issue_date))}</TableCell>
                             <TableCell>{formatCurrency(invoice.total, invoice.currency)}</TableCell>
