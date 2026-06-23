@@ -138,11 +138,23 @@ export const getDashboardStats = async (
   orgId: string): Promise<DashboardStats> => {
     const supabase = await createAdminClient();
 
-    const { data, error } = await supabase
-      .from("v_dashboard_stats")
-      .select("*")
-      .eq("org_id", orgId)
-      .maybeSingle();
+    const [statsResult, revenueResult] = await Promise.all([
+      supabase
+        .from("v_dashboard_stats")
+        .select("*")
+        .eq("org_id", orgId)
+        .maybeSingle(),
+      supabase
+        .from("v_monthly_revenue")
+        .select("total")
+        .eq("org_id", orgId)
+        .gte("month", `${new Date().getFullYear()}-01-01`)
+        .lte("month", `${new Date().getFullYear()}-12-31`),
+    ]);
+
+    const { data, error } = statsResult;
+    const revenue_ytd =
+      revenueResult.data?.reduce((sum, r) => sum + (r.total || 0), 0) || 0;
 
     console.log("Fetched dashboard stats for orgId", orgId, ":", data);
     if (error) {
@@ -151,11 +163,9 @@ export const getDashboardStats = async (
         "Error fetching dashboard stats data",
         { orgId, error },
       );
-      // If no stats exist yet, return default values
-      // This is an acceptable empty state, not an error
       return {
         org_id: orgId,
-        revenue_ytd: 0,
+        revenue_ytd,
         outstanding_total: 0,
         overdue_count: 0,
         total_invoices: 0,
@@ -183,8 +193,12 @@ export const getDashboardStats = async (
         },
       },
     );
-    // return data as DashboardStats;
-    return data as any;
+
+    return {
+      ...data,
+      revenue_ytd,
+      outstanding_total: (data as any)?.outstanding_amount || 0,
+    } as DashboardStats;
   }
 
 /**

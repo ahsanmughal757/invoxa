@@ -11,37 +11,38 @@ import { Invoice } from '@/types/invoice';
  * Calculates the computed state of an invoice based on payment data
  * instead of relying on manually set status values.
  */
-export function getComputedInvoiceState(invoice: Invoice): 'draft' | 'sent' | 'partially_paid' | 'paid' | 'overdue' {
+export function getComputedInvoiceState(invoice: Invoice): string {
+  // Pass through cancelled/void as-is
+  if (invoice.status === 'cancelled' || invoice.status === 'void') {
+    return invoice.status;
+  }
+
   const paidAmount = invoice.paid_amount || 0;
   const isFullyPaid = paidAmount >= invoice.total;
 
-  // If fully paid, state is always 'paid'
   if (isFullyPaid) {
     return 'paid';
   }
 
-  // Only consider overdue for invoices that have been sent (not drafts)
-  // Drafts don't have due dates that matter for overdue status
-  const isSentInvoice = invoice.status !== 'draft';
-  const isOverdue = isSentInvoice && new Date(invoice.due_date) < new Date() && !isFullyPaid;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  // If overdue and not fully paid, state is 'overdue'
+  const isSentInvoice = invoice.status !== 'draft';
+  const isOverdue = isSentInvoice && new Date(invoice.due_date) < today && !isFullyPaid;
+
   if (isOverdue) {
     return 'overdue';
   }
 
-  // If no payments made yet
   if (paidAmount === 0) {
-    return invoice.status as 'draft' | 'sent'; // Use original status for draft/sent distinction
+    return invoice.status;
   }
 
-  // If some payments made but not full amount
   if (paidAmount > 0 && !isFullyPaid) {
     return 'partially_paid';
   }
 
-  // Default fallback (shouldn't normally reach here)
-  return invoice.status as 'draft' | 'sent' | 'overdue';
+  return invoice.status;
 }
 
 /**
@@ -53,7 +54,9 @@ export function getInvoiceStateLabel(state: ReturnType<typeof getComputedInvoice
     sent: 'Sent',
     partially_paid: 'Partially Paid',
     paid: 'Paid',
-    overdue: 'Overdue'
+    overdue: 'Overdue',
+    cancelled: 'Cancelled',
+    void: 'Void',
   };
   
   return labels[state] || state;
@@ -68,10 +71,12 @@ export function getInvoiceStateColorClass(state: ReturnType<typeof getComputedIn
     sent: 'bg-blue-100 text-blue-800',
     partially_paid: 'bg-yellow-100 text-yellow-800',
     paid: 'bg-green-100 text-green-800',
-    overdue: 'bg-red-100 text-red-800'
+    overdue: 'bg-red-100 text-red-800',
+    cancelled: 'bg-gray-100 text-gray-500',
+    void: 'bg-gray-100 text-gray-400',
   };
   
-  return colors[state];
+  return colors[state] || 'bg-gray-100 text-gray-500';
 }
 
 /**

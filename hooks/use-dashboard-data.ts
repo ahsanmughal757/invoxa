@@ -1,7 +1,6 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { getClientsByOrgId } from "@/lib/repositories/clients.repository.func";
 import { useOrganization } from "./use-organization";
 import {
   useDashboardStatsQuery,

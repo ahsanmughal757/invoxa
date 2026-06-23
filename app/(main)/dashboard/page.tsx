@@ -108,13 +108,19 @@ export default function DashboardPage() {
       ).length,
     };
 
+    // Overdue-only amount for Aging Analysis
+    const overdueAmount = invoiceSummary
+      .filter((inv) => inv.computed_status === "overdue")
+      .reduce((sum, inv) => sum + (inv.remaining_amount || 0), 0);
+
     // Top Debtors (Clients with highest outstanding balances) - using pre-computed data
     const topDebtors = invoiceSummary
       .filter(
         (inv) =>
           inv.computed_status !== "paid" &&
           inv.computed_status !== "cancelled" &&
-          inv.computed_status !== "void",
+          inv.computed_status !== "void" &&
+          inv.computed_status !== "draft",
       )
       .sort((a, b) => b.remaining_amount - a.remaining_amount)
       .slice(0, 5)
@@ -394,9 +400,6 @@ export default function DashboardPage() {
                 {recentInvoices.length > 0 ? (
                   <div className="space-y-4">
                     {recentInvoices.map((invoice) => {
-                      const client = clients.find(
-                        (c) => c.id === invoice.client_id,
-                      );
                       return (
                         <div
                           key={invoice.id}
@@ -405,7 +408,7 @@ export default function DashboardPage() {
                           <div>
                             <div className="font-medium">{invoice.number}</div>
                             <div className="text-sm text-gray-600">
-                              {client?.name || invoice.client_name}
+                              {invoice.client_name}
                             </div>
                             <div className="text-xs text-gray-500">
                               {formatDate(invoice.created_at)}
@@ -455,7 +458,7 @@ export default function DashboardPage() {
                         {dashboardStats.overdue_count}
                       </div>
                       <div className="text-sm text-red-600">
-                        {formatCurrency(dashboardStats.outstanding_total || 0)}
+                        {formatCurrency(overdueAmount)}
                       </div>
                     </div>
                   </div>
@@ -470,9 +473,9 @@ export default function DashboardPage() {
                         </span>
                       </li>
                       <li className="flex justify-between">
-                        <span>Outstanding Amount</span>
+                        <span>Overdue Amount</span>
                         <span className="font-medium">
-                          {formatCurrency(dashboardStats.outstanding_total || 0)}
+                          {formatCurrency(overdueAmount)}
                         </span>
                       </li>
                       <li className="flex justify-between">

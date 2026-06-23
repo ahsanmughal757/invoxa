@@ -81,7 +81,8 @@ export function InsightsDashboard({
       case "90d":
         return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
       case "6m":
-        return new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+        now.setMonth(now.getMonth() - 6);
+        return now;
       case "1y":
         return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
       default:
@@ -143,16 +144,26 @@ export function InsightsDashboard({
     const collectionRate =
       totalInvoiced > 0 ? (totalRevenue / totalInvoiced) * 100 : 0;
 
-    // Calculate average payment time
+    // Calculate average payment time using actual payment records
     const paidInvoicesWithDates = filteredData.invoices.filter((inv) => {
       const state = getComputedInvoiceState(inv);
-      return state === "paid" && inv.paid_amount;
+      return state === "paid";
     });
     const avgPaymentTime =
       paidInvoicesWithDates.length > 0
         ? paidInvoicesWithDates.reduce((sum, inv) => {
+            const invoicePayments = filteredData.payments.filter(
+              (p) => p.invoice_id === inv.id,
+            );
+            if (invoicePayments.length === 0) return sum;
+            const earliestPayment = invoicePayments.reduce(
+              (earliest, p) =>
+                new Date(p.received_on) < new Date(earliest.received_on)
+                  ? p
+                  : earliest,
+            );
             const daysDiff = Math.ceil(
-              (new Date(inv.paid_amount!).getTime() -
+              (new Date(earliestPayment.received_on).getTime() -
                 new Date(inv.issue_date).getTime()) /
                 (1000 * 60 * 60 * 24),
             );
@@ -245,7 +256,10 @@ export function InsightsDashboard({
     );
 
     return Object.entries(statusCounts).map(([status, count]) => ({
-      name: status.charAt(0).toUpperCase() + status.slice(1),
+      name: status
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" "),
       value: count,
       percentage: (count / filteredData.invoices.length) * 100,
     }));

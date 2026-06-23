@@ -4,13 +4,21 @@ import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { ReportsAnalytics } from '@/components/reports/reports-analytics';
 import { SubscriptionGuard } from '@/components/subscription/subscription-guard';
 import { FEATURES } from '@/hooks/use-subscription-access';
-import { LoadingState, EmptyState, ErrorState, ReadyState } from '@/components/ui/state-components';
+import { LoadingState, EmptyState, ErrorState } from '@/components/ui/state-components';
 import { NoOrganizationState } from '@/components/empty-states/no-organization-state';
 import { useOrganization } from '@/hooks/use-organization';
+import { usePayments } from '@/hooks/use-payments';
+import { useExpenses } from '@/hooks/use-expenses';
+import { useClients } from '@/hooks/use-clients';
 
 export default function ReportsPage() {
-  const { invoiceSummary, clients, isLoading, isEmpty, isError, errorMessage, isReady } = useDashboardData();
+  const { invoiceSummary, isLoading: dashLoading, isEmpty, isError, errorMessage, isReady } = useDashboardData();
   const { isEmpty: orgIsEmpty } = useOrganization();
+  const { payments, isLoading: paymentsLoading } = usePayments();
+  const { expenses, isLoading: expensesLoading } = useExpenses();
+  const { clients, isLoading: clientsLoading } = useClients();
+
+  const isLoading = dashLoading || paymentsLoading || expensesLoading || clientsLoading;
 
   // Loading State
   if (isLoading) {
@@ -35,35 +43,15 @@ export default function ReportsPage() {
     );
   }
 
-  // Empty State
-  if (isEmpty) {
-    return (
-      <SubscriptionGuard feature={FEATURES.REPORTS_ANALYTICS}>
-        <EmptyState
-          title="No Report Data Available"
-          description="Your organization doesn't have any financial data yet. Create invoices to start tracking your finances."
-          action={{
-            text: "Create Invoice",
-            onClick: () => window.location.href = "/invoices/create",
-          }}
-        />
-      </SubscriptionGuard>
-    );
-  }
-
   // Ready State
-  if (isReady) {
+  if (isReady || (!isLoading && !isError)) {
     // Convert invoiceSummary to the format expected by ReportsAnalytics
-    // This maintains compatibility with the existing component
     const invoices = invoiceSummary.map(inv => {
-      // Ensure invoice_items exists (even if empty) to satisfy Invoice interface
       const invoiceItems = 'invoice_items' in inv ? inv.invoice_items : [];
 
       return {
         ...inv,
-        // Map computed_status to status for compatibility
         status: inv.computed_status || inv.status,
-        // Use remaining_amount instead of calculating outstanding
         paid_amount: inv.paid_amount || 0,
         invoice_items: invoiceItems
       };
@@ -73,8 +61,8 @@ export default function ReportsPage() {
       <SubscriptionGuard feature={FEATURES.REPORTS_ANALYTICS}>
         <ReportsAnalytics
           invoices={invoices}
-          payments={[]} // Payments will be fetched separately in the component if needed
-          expenses={[]} // Expenses will be fetched separately in the component if needed
+          payments={payments}
+          expenses={expenses}
           clients={clients}
           loading={false}
         />
@@ -82,8 +70,17 @@ export default function ReportsPage() {
     );
   }
 
-  // Fallback
+  // Empty State (no invoice data)
   return (
-    <LoadingState message="Preparing reports..." size="large" />
+    <SubscriptionGuard feature={FEATURES.REPORTS_ANALYTICS}>
+      <EmptyState
+        title="No Report Data Available"
+        description="Your organization doesn't have any financial data yet. Create invoices to start tracking your finances."
+        action={{
+          text: "Create Invoice",
+          onClick: () => window.location.href = "/invoices/create",
+        }}
+      />
+    </SubscriptionGuard>
   );
 }
