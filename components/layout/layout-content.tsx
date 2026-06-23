@@ -27,6 +27,7 @@ import {
   LayoutDashboard,
   Crown,
   CircleAlert,
+  Mail,
 } from "lucide-react";
 import { Select, SelectTrigger, SelectItem, SelectContent } from "../ui/select";
 import { LicenseBanner } from "@/components/license/license-banner";
@@ -48,6 +49,11 @@ import {
 } from "@radix-ui/react-collapsible";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { TooltipArrow, TooltipPortal } from "@radix-ui/react-tooltip";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 
 export function LayoutContent({ children }: { children: React.ReactNode }) {
   const { settings } = useInvoices();
@@ -588,6 +594,34 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
           </div>
           <div className="flex items-center space-x-4">
             <NotificationBell />
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                  title="Contact Support"
+                >
+                  <Mail className="h-5 w-5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                className="w-64"
+              >
+                <div className="space-y-3">
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Contact Support
+                  </h4>
+                  <a
+                    href="mailto:ahsanmg1998@gmail.com"
+                    className="flex items-center gap-3 text-sm text-gray-700 hover:text-blue-600 transition-colors"
+                  >
+                    <Mail className="h-4 w-4" />
+                    ahsanmg1998@gmail.com
+                  </a>
+                </div>
+              </PopoverContent>
+            </Popover>
 
             <SignedIn>
               <UserButton />

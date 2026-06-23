@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, FileText } from "lucide-react";
+import { Menu, X, FileText, Mail } from "lucide-react";
 
 import {
   useUser,
@@ -10,6 +10,11 @@ import {
   SignInButton,
   UserButton,
 } from "@clerk/nextjs";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 
 type NavLinkType = {
   name: string;
@@ -66,6 +71,31 @@ const Navbar: React.FC = () => {
               </a>
             ))}
 
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="text-sm font-bold text-slate-400 hover:text-white transition-colors tracking-wide uppercase">
+                  Support
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="center"
+                className="w-64 bg-slate-900 border-white/10 text-white"
+              >
+                <div className="space-y-3">
+                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Contact Us
+                  </h4>
+                  <a
+                    href="mailto:ahsanmg1998@gmail.com"
+                    className="flex items-center gap-3 text-sm text-slate-300 hover:text-indigo-400 transition-colors"
+                  >
+                    <Mail className="h-4 w-4" />
+                    ahsanmg1998@gmail.com
+                  </a>
+                </div>
+              </PopoverContent>
+            </Popover>
+
             <SignedIn>
               <UserButton />
             </SignedIn>
@@ -117,6 +147,21 @@ const Navbar: React.FC = () => {
               {link.name}
             </a>
           ))}
+
+          <div className="space-y-4">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Support
+            </p>
+            <a
+              href="mailto:ahsanmg1998@gmail.com"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center justify-center gap-2 text-lg text-slate-300 hover:text-indigo-400 transition-colors"
+            >
+              <Mail className="h-5 w-5" />
+              ahsanmg1998@gmail.com
+            </a>
+          </div>
+
           <button className="w-full py-5 bg-indigo-600 text-white font-black rounded-2xl text-lg shadow-2xl shadow-indigo-500/20">
             Get Started
           </button>
