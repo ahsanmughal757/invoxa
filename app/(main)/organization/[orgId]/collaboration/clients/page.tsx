@@ -25,11 +25,13 @@ import {
   MapPin,
   Globe,
   Building,
+  Loader2,
 } from "lucide-react";
 import { Client } from "@/types/invoice";
 import { useInvoices } from "@/hooks/use-invoices";
 import toast from "react-hot-toast";
 import { useClients } from "@/hooks/use-clients";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export default function ClientsCollaborationPage() {
   const { orgId } = useParams<{ orgId: string }>();
@@ -37,6 +39,8 @@ export default function ClientsCollaborationPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -94,6 +98,7 @@ export default function ClientsCollaborationPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    setIsSubmitting(true);
     try {
       if (editingClient && editingClient.id) {
         // Update existing client
@@ -128,6 +133,8 @@ export default function ClientsCollaborationPage() {
     } catch (error: any) {
       console.error("Error saving client:", error);
       toast.error(error.message || "Failed to save client");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -153,13 +160,12 @@ export default function ClientsCollaborationPage() {
     setIsCreating(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this client?")) {
-      return;
-    }
+  const handleDelete = async () => {
+    if (!clientToDelete) return;
 
     try {
-      await deleteClient(id);
+      await deleteClient(clientToDelete.id!);
+      setClientToDelete(null);
       toast.success("Client deleted successfully");
     } catch (error: any) {
       console.error("Error deleting client:", error);
@@ -395,7 +401,8 @@ export default function ClientsCollaborationPage() {
                 <Button type="button" variant="outline" onClick={handleCancel}>
                   Cancel
                 </Button>
-                <Button type="submit">
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {editingClient ? "Update Client" : "Create Client"}
                 </Button>
               </div>
@@ -476,9 +483,7 @@ export default function ClientsCollaborationPage() {
                             <Button
                               variant="destructive"
                               size="sm"
-                              onClick={() => {
-                                if (client.id) handleDelete(client.id);
-                              }}
+                              onClick={() => setClientToDelete(client)}
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
                               Delete
@@ -494,6 +499,19 @@ export default function ClientsCollaborationPage() {
           </CardContent>
         </Card>
       )}
+
+      <ConfirmDialog
+        open={!!clientToDelete}
+        onOpenChange={(open) => {
+          if (!open) setClientToDelete(null);
+        }}
+        title="Delete Client"
+        description={`Are you sure you want to delete the client "${clientToDelete?.name || ""}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

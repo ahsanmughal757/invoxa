@@ -23,12 +23,14 @@ import {
   Calendar,
   DollarSign,
   FileText,
+  Loader2,
 } from "lucide-react";
 import { Invoice, PaymentRecord } from "@/types/invoice";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { useInvoices } from "@/hooks/use-invoices";
 import { usePayments } from "@/hooks/use-payments";
 import toast from "react-hot-toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export default function PaymentsCollaborationPage() {
   const { orgId } = useParams<{ orgId: string }>();
@@ -42,6 +44,11 @@ export default function PaymentsCollaborationPage() {
     null,
   );
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentToDelete, setPaymentToDelete] = useState<PaymentRecord | null>(
+    null,
+  );
+  const [inDeletion, setInDeletion] = useState(false);
   const [formData, setFormData] = useState({
     amount: 0,
     method: "bank_transfer" as
@@ -57,16 +64,8 @@ export default function PaymentsCollaborationPage() {
     notes: "",
   });
 
-  // Filter payments by organization through associated invoices
-  const orgPayments = payments.filter((payment) => {
-    const invoice = invoices.find(
-      (inv: Invoice) => inv.id === payment.invoice_id,
-    );
-    return invoice && invoice.org_id === orgId;
-  });
-
   // Filter based on search term
-  const filteredPayments = orgPayments.filter(
+  const filteredPayments = payments.filter(
     (payment) =>
       payment.reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.method.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -100,9 +99,12 @@ export default function PaymentsCollaborationPage() {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     try {
       if (editingPayment) {
         // Update existing payment
@@ -144,17 +146,22 @@ export default function PaymentsCollaborationPage() {
     setIsCreating(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this payment?")) {
-      return;
-    }
+  const handleDeleteClick = (payment: PaymentRecord) => {
+    setPaymentToDelete(payment);
+  };
 
+  const handleDelete = async (id: string) => {
+    if (!paymentToDelete) return;
+    setInDeletion(true);
     try {
       await deletePayment(id);
+      setPaymentToDelete(null);
       toast.success("Payment deleted successfully");
     } catch (error: any) {
       console.error("Error deleting payment:", error);
       toast.error(error.message || "Failed to delete payment");
+    } finally {
+      setInDeletion(false);
     }
   };
 
@@ -391,7 +398,7 @@ export default function PaymentsCollaborationPage() {
                               <Button
                                 variant="destructive"
                                 size="sm"
-                                onClick={() => handleDelete(payment.id)}
+                                onClick={() => handleDeleteClick(payment)}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Delete

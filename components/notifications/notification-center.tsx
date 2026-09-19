@@ -1,99 +1,187 @@
-"use client"
+"use client";
 
-import { useState } from 'react'
-import { Notification } from '@/types/invoice'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { formatDate } from '@/lib/utils'
-import { BackButton } from '@/components/ui/back-button'
-import { Bell, Check, X, AlertCircle, DollarSign, Calendar, Settings } from 'lucide-react'
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDate } from "@/lib/utils";
+import { PageHeader } from "@/components/ui/page-header";
+import { BackButton } from "@/components/ui/back-button";
+import {
+  Bell,
+  Check,
+  X,
+  AlertCircle,
+  DollarSign,
+  Calendar,
+  Settings,
+  Loader2,
+  CheckCheck,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import toast from "react-hot-toast";
 
-interface NotificationCenterProps {
-  notifications: Notification[]
-  onMarkAsRead: (id: string) => void
-  onMarkAllAsRead: () => void
-  onDeleteNotification: (id: string) => void
+// Notification rows from the `notifications` table use `is_read` and `created_at`
+interface AppNotification {
+  id: string;
+  message: string;
+  is_read: boolean;
+  created_at?: string;
+  link?: string | null;
 }
 
-export function NotificationCenter({ 
-  notifications, 
-  onMarkAsRead, 
-  onMarkAllAsRead, 
-  onDeleteNotification 
+interface NotificationCenterProps {
+  notifications: AppNotification[];
+  onMarkAsRead: (id: string) => Promise<void> | void;
+  onMarkAllAsRead: () => Promise<void> | void;
+  onDeleteNotification: (id: string) => Promise<void> | void;
+}
+
+const typeTones: Record<string, { icon: React.ReactNode; card: string }> = {
+  invoice_overdue: {
+    icon: <AlertCircle className="h-5 w-5 text-destructive" />,
+    card: "bg-destructive/5 border-destructive/20",
+  },
+  payment_received: {
+    icon: <DollarSign className="h-5 w-5 text-success" />,
+    card: "bg-success/5 border-success/20",
+  },
+  recurring_invoice: {
+    icon: <Calendar className="h-5 w-5 text-info" />,
+    card: "bg-info/5 border-info/20",
+  },
+  default: {
+    icon: <Settings className="h-5 w-5 text-muted-foreground" />,
+    card: "bg-card border-border",
+  },
+};
+
+function toneFor(notification: AppNotification) {
+  const message = notification.message.toLowerCase();
+  if (message.includes("invitation")) {
+    return typeTones.invoice_overdue;
+  }
+  if (message.includes("payment")) {
+    return typeTones.payment_received;
+  }
+  if (message.includes("invoice")) {
+    return typeTones.recurring_invoice;
+  }
+  return typeTones.default;
+}
+
+export function NotificationCenter({
+  notifications,
+  onMarkAsRead,
+  onMarkAllAsRead,
+  onDeleteNotification,
 }: NotificationCenterProps) {
-  const [filter, setFilter] = useState<'all' | 'unread'>('all')
+  const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [pendingIds, setPendingIds] = useState<Record<string, boolean>>({});
+  const [markAllPending, setMarkAllPending] = useState(false);
+  const [deletePending, setDeletePending] = useState<Record<string, boolean>>(
+    {},
+  );
 
-  const filteredNotifications = notifications.filter(notification => 
-    filter === 'all' || !notification.read
-  )
+  const filteredNotifications = notifications.filter((notification) =>
+    filter === "all" ? true : !notification.is_read,
+  );
 
-  const unreadCount = notifications.filter(n => !n.read).length
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  const getNotificationIcon = (type: Notification['type']) => {
-    switch (type) {
-      case 'invoice_overdue':
-        return <AlertCircle className="h-5 w-5 text-red-500" />
-      case 'payment_received':
-        return <DollarSign className="h-5 w-5 text-green-500" />
-      case 'recurring_invoice':
-        return <Calendar className="h-5 w-5 text-blue-500" />
-      default:
-        return <Settings className="h-5 w-5 text-gray-500" />
+  const handleMarkAsRead = async (id: string) => {
+    setPendingIds((prev) => ({ ...prev, [id]: true }));
+    try {
+      await onMarkAsRead(id);
+      toast.success("Notification marked as read");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to mark notification as read",
+      );
+    } finally {
+      setPendingIds((prev) => ({ ...prev, [id]: false }));
     }
-  }
+  };
 
-  const getNotificationColor = (type: Notification['type']) => {
-    switch (type) {
-      case 'invoice_overdue':
-        return 'bg-red-50 border-red-200'
-      case 'payment_received':
-        return 'bg-green-50 border-green-200'
-      case 'recurring_invoice':
-        return 'bg-blue-50 border-blue-200'
-      default:
-        return 'bg-gray-50 border-gray-200'
+  const handleMarkAllAsRead = async () => {
+    setMarkAllPending(true);
+    try {
+      await onMarkAllAsRead();
+      toast.success("All notifications marked as read");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to mark all notifications as read",
+      );
+    } finally {
+      setMarkAllPending(false);
     }
-  }
+  };
+
+  const handleDelete = async (id: string) => {
+    setDeletePending((prev) => ({ ...prev, [id]: true }));
+    try {
+      await onDeleteNotification(id);
+      toast.success("Notification deleted");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete notification",
+      );
+    } finally {
+      setDeletePending((prev) => ({ ...prev, [id]: false }));
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-          <Bell className="h-8 w-8 mr-3 text-blue-600" />
-          Notifications
-          {unreadCount > 0 && (
-            <Badge className="ml-3 bg-red-500 text-white">
-              {unreadCount}
-            </Badge>
-          )}
-        </h1>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <PageHeader
+          title="Notifications"
+          description={
+            unreadCount > 0
+              ? `You have ${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`
+              : "You're all caught up"
+          }
+        />
+        <div className="flex flex-wrap items-center gap-2">
           <BackButton href="/dashboard">Back to Dashboard</BackButton>
-          <Button
-            variant={filter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilter('all')}
-          >
-            All
-          </Button>
-          <Button
-            variant={filter === 'unread' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilter('unread')}
-          >
-            Unread ({unreadCount})
-          </Button>
-          {unreadCount > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onMarkAllAsRead}
-            >
-              Mark All Read
-            </Button>
-          )}
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          variant={filter === "all" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setFilter("all")}
+        >
+          All
+        </Button>
+        <Button
+          variant={filter === "unread" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setFilter("unread")}
+        >
+          Unread ({unreadCount})
+        </Button>
+        {unreadCount > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleMarkAllAsRead}
+            disabled={markAllPending}
+          >
+            {markAllPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCheck className="mr-2 h-4 w-4" />
+            )}
+            Mark All Read
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -102,65 +190,88 @@ export function NotificationCenter({
         </CardHeader>
         <CardContent>
           {filteredNotifications.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
+            <div className="py-8 text-center text-muted-foreground">
+              {filter === "unread"
+                ? "No unread notifications"
+                : "No notifications yet"}
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredNotifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-4 rounded-lg border transition-colors ${
-                    notification.read ? 'bg-white border-gray-200' : getNotificationColor(notification.type)
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3">
-                      {getNotificationIcon(notification.type)}
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <h3 className={`font-medium ${!notification.read ? 'font-semibold' : ''}`}>
-                            {notification.title}
-                          </h3>
-                          {!notification.read && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              {filteredNotifications.map((notification) => {
+                const tone = toneFor(notification);
+                return (
+                  <div
+                    key={notification.id}
+                    className={cn(
+                      `rounded-lg border p-4 transition-colors`,
+                      notification.is_read ? "bg-card border-border" : tone.card,
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start space-x-3">
+                        {tone.icon}
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <h3
+                              className={cn(
+                                "text-sm",
+                                !notification.is_read &&
+                                  "font-semibold",
+                              )}
+                            >
+                              {notification.message}
+                            </h3>
+                            {!notification.is_read && (
+                              <span className="h-2 w-2 rounded-full bg-info" />
+                            )}
+                          </div>
+                          {notification.created_at && (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {formatDate(new Date(notification.created_at))}
+                            </p>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          {formatDate(notification.createdAt)}
-                        </p>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {!notification.read && (
+                      <div className="flex shrink-0 items-center space-x-2">
+                        {!notification.is_read && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={pendingIds[notification.id]}
+                            onClick={() =>
+                              handleMarkAsRead(notification.id)
+                            }
+                            title="Mark as read"
+                          >
+                            {pendingIds[notification.id] ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Check className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => onMarkAsRead(notification.id)}
-                          title="Mark as read"
+                          disabled={deletePending[notification.id]}
+                          onClick={() => handleDelete(notification.id)}
+                          title="Delete notification"
                         >
-                          <Check className="h-4 w-4" />
+                          {deletePending[notification.id] ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <X className="h-4 w-4" />
+                          )}
                         </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDeleteNotification(notification.id)}
-                        title="Delete notification"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

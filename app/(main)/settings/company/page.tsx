@@ -1,35 +1,26 @@
 "use client";
 
-import { useInvoiceContext } from "@/context/InvoiceContext";
 import { useAuth } from "@clerk/nextjs";
 import { CompanySettings } from "@/components/settings/company-settings";
-import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/back-button";
-import { useRouter } from "next/navigation";
 import { Organization, Company } from "@/types/invoice";
 import { useOrganization } from "@/hooks/use-organization";
-import { useEffect } from "react";
+import { PageHeader } from "@/components/ui/page-header";
 
-export const dynamic = "force-dynamic";
 // Helper function to convert Organization to Company
 const organizationToCompany = (org: Organization | null): Company | null => {
   if (!org) return null;
   return {
     id: org.id,
     name: org.name,
-    // email: "", // Organization doesn't have email
-    // phone: "", // Organization doesn't have phone
-    // address: "", // Organization doesn't have address
-    // website: "", // Organization doesn't have website
-    // taxId: "", // Organization doesn't have taxId
-    email: org.branding?.email || "", // Organization doesn't have email
-    phone: org.branding?.phone || "", // Organization doesn't have phone
-    address: org.branding?.address || "", // Organization doesn't have address
-    website: org.branding?.website || "", // Organization doesn't have website
-    taxId: "", // Organization doesn't have taxId
+    email: org.branding?.email || "",
+    phone: org.branding?.phone || "",
+    address: org.branding?.address || "",
+    website: org.branding?.website || "",
+    taxId: "",
     logo: org.logo_url,
-    paymentInstructions: "", // Organization doesn't have this
-    bankDetails: org.branding?.bankDetails || undefined, // Organization doesn't have bank details,
+    paymentInstructions: "",
+    bankDetails: org.branding?.bankDetails || undefined,
     branding: org.branding,
   };
 };
@@ -38,12 +29,11 @@ const organizationToCompany = (org: Organization | null): Company | null => {
 const companyToOrganization = (company: Company): Organization => {
   return {
     id: company.id || "",
-    owner_user_id: company.owner_user_id || "", // This would need to be obtained from auth context
+    owner_user_id: company.owner_user_id || "",
     name: company.name,
     logo_url: company.logo,
     email: company.email,
     branding: {
-      // Extract relevant branding info from company data
       email: company.email,
       phone: company.phone,
       address: company.address,
@@ -57,7 +47,6 @@ const companyToOrganization = (company: Company): Organization => {
 };
 
 export default function CompanySettingsPage() {
-  const router = useRouter();
   const { userId } = useAuth();
   const {
     selectedOrganization: organization,
@@ -69,39 +58,33 @@ export default function CompanySettingsPage() {
     ? organizationToCompany(organization)
     : null;
 
-  useEffect(() => {
-    if (userId) {
-      router.refresh();
-    }
-  }, []);
-
   const handleSaveCompany = async (companyData: Company) => {
+    if (!userId) {
+      throw new Error("You must be signed in to save company information");
+    }
+
     const orgData = companyToOrganization({
       ...companyData,
-      owner_user_id: userId || "",
+      owner_user_id: userId,
     });
+
     if (organization) {
-      updateOrganization(orgData);
+      await updateOrganization(orgData);
     } else {
-      console.log("userId: ", userId);
-      console.log("Creating new organization with data:", orgData);
-      console.log("Organization created successfully with data:", {
+      await createOrganization({
         ...orgData,
-        owner_user_id: userId || "",
+        owner_user_id: userId,
       });
-      if (userId) createOrganization(orgData);
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Company Settings</h1>
-          <p className="text-gray-600 mt-1">
-            Configure your company information to appear on all invoices
-          </p>
-        </div>
+        <PageHeader
+          title="Company Settings"
+          description="Configure your company information to appear on all invoices"
+        />
         <BackButton href="/settings">Back to Settings</BackButton>
       </div>
       <CompanySettings company={cleanedCompany} onSave={handleSaveCompany} />

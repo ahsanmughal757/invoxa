@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { useAuth, useUser } from "@clerk/nextjs";
-import { Bell } from "lucide-react";
+import { useAuth } from "@clerk/nextjs";
+import { Bell, Loader2 } from "lucide-react";
 import { useNotification } from "@/providers/notification-provider";
 import {
   Popover,
@@ -24,6 +24,8 @@ export function NotificationBell() {
   const { userId } = useAuth();
   const { notifications } = useNotification();
   const [nots, setNots] = useState(notifications);
+  const [pendingIds, setPendingIds] = useState<Record<string, boolean>>({});
+  const [clearAllPending, setClearAllPending] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
@@ -34,13 +36,12 @@ export function NotificationBell() {
   const handleClearNotification = async (notificationId: string) => {
     if (!userId) return;
 
+    setPendingIds((prev) => ({ ...prev, [notificationId]: true }));
     try {
       const userData = await getDBUser(userId, "clerk");
 
       if (!userData.id) return;
 
-      // Implement the logic to mark a single notification as read
-      // This function needs to be created in your notifications queries
       await markNotificationAsRead(notificationId, userData.id);
 
       setNots((prevNots) => [
@@ -49,12 +50,15 @@ export function NotificationBell() {
     } catch (error) {
       console.error("Error clearing notification:", error);
       toast.error("Failed to clear notification. Something went wrong.");
+    } finally {
+      setPendingIds((prev) => ({ ...prev, [notificationId]: false }));
     }
   };
 
   const handleClearAll = async () => {
     if (!userId) return;
 
+    setClearAllPending(true);
     try {
       const userData = await getDBUser(userId, "clerk");
 
@@ -62,10 +66,12 @@ export function NotificationBell() {
 
       await clearAllNotificationsForUser(userData.id);
 
-      setNots((prevNots) => []);
+      setNots([]);
     } catch (error) {
       console.error("Error clearing notifications:", error);
       toast.error("Failed to clear notifications. Something went wrong.");
+    } finally {
+      setClearAllPending(false);
     }
   };
 
@@ -75,18 +81,19 @@ export function NotificationBell() {
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute top-2 right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+            <span className="absolute right-2 top-2 inline-flex h-4 min-w-4 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full bg-destructive px-1 text-xs font-bold leading-none text-white">
               {unreadCount}
             </span>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80">
+      <PopoverContent className="w-80" align="end">
         <div className="grid gap-4">
           <div className="space-y-2">
             <h4 className="font-medium leading-none">Notifications</h4>
             <p className="text-sm text-muted-foreground">
-              You have {unreadCount} unread messages.
+              You have {unreadCount} unread message
+              {unreadCount === 1 ? "" : "s"}.
             </p>
           </div>
           <div
@@ -95,62 +102,62 @@ export function NotificationBell() {
           >
             {nots.length > 0 ? (
               nots.map((notification) => {
-                if (!notification.link)
-                  return (
-                    <div
-                      key={notification.id}
-                      // className="grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0"
-                      className={clsx(
-                        `items-start pb-4 last:mb-0 last:pb-0 transition-transform duration-300 ease-in-out transform translate-x-0`,
-                        notification.is_read && "translate-x-4",
-                      )}
-                    >
-                      <div className={`grid gap-1`}>
-                        <p className="flex gap-2 text-sm font-medium">
-                          <span className="flex w-2 rounded-full bg-sky-500" />
-                          {notification.message}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(notification.created_at).toLocaleString()}
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleClearNotification(notification.id)}
-                      >
-                        Mark as Read
-                      </Button>
-                    </div>
-                  );
-
-                return (
-                  <Link
-                    key={notification.id}
-                    href={notification?.link}
-                    // className="grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0 hover:bg-accent rounded-md p-2"
-                    className={clsx(
-                      `items-start pb-4 last:mb-0 last:pb-0 transition-transform duration-300 ease-in-out transform translate-x-0`,
-                      notification.is_read && "translate-x-4",
-                    )}
-                  >
-                    <div className="grid gap-1 hover:bg-accent">
-                      <p className="flex gap-2 text-sm font-medium">
-                        <span className="flex w-2 rounded-full bg-sky-500" />
+                const isPending = !!pendingIds[notification.id];
+                const inner = (
+                  <div className="flex items-start justify-between gap-2 rounded-md border border-border bg-card p-3">
+                    <div className="grid gap-1">
+                      <p className="text-sm font-medium leading-snug">
                         {notification.message}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(notification.created_at).toLocaleString()}
+                      <p className="text-xs text-muted-foreground">
+                        {notification.created_at
+                          ? new Date(notification.created_at).toLocaleString()
+                          : ""}
                       </p>
                     </div>
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      onClick={() => handleClearNotification(notification.id)}
+                      disabled={isPending}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleClearNotification(notification.id);
+                      }}
                     >
-                      Mark as Read
+                      {isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Mark as Read"
+                      )}
                     </Button>
+                  </div>
+                );
+
+                return notification.link ? (
+                  <Link
+                    key={notification.id}
+                    href={notification.link}
+                    className={clsx(
+                      "rounded-md",
+                      !notification.is_read && "ring-1 ring-blue-200",
+                    )}
+                    onClick={() =>
+                      handleClearNotification(notification.id)
+                    }
+                  >
+                    {inner}
                   </Link>
+                ) : (
+                  <div
+                    key={notification.id}
+                    className={clsx(
+                      "rounded-md",
+                      !notification.is_read && "ring-1 ring-blue-200",
+                    )}
+                  >
+                    {inner}
+                  </div>
                 );
               })
             ) : (
@@ -159,7 +166,15 @@ export function NotificationBell() {
               </p>
             )}
 
-            <Button variant="default" onClick={handleClearAll}>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleClearAll}
+              disabled={clearAllPending}
+            >
+              {clearAllPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Clear All
             </Button>
           </div>

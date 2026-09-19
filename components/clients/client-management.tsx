@@ -443,8 +443,11 @@ function ClientForm({ client, onSave, onCancel }: ClientFormProps) {
 
   const handleFormSubmit = async (data: ClientFormData) => {
     setIsSubmitting(true);
-    await onSave(data);
-    setIsSubmitting(false);
+    try {
+      await onSave(data);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

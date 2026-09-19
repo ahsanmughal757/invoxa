@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, Building, Upload, X } from "lucide-react";
+import { Save, Building, Upload, X, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 // Zod schema for validation
@@ -42,7 +42,7 @@ type CompanyFormData = z.infer<typeof companySchema>;
 
 interface CompanySettingsProps {
   company: Company | null;
-  onSave: (company: Company) => void;
+  onSave: (company: Company) => Promise<void>;
 }
 
 export function CompanySettings({ company, onSave }: CompanySettingsProps) {
@@ -76,6 +76,7 @@ export function CompanySettings({ company, onSave }: CompanySettingsProps) {
   });
 
   const [showBankDetails, setShowBankDetails] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Watch for logo changes to update preview
   const logoValue = watch("logo");
@@ -84,7 +85,7 @@ export function CompanySettings({ company, onSave }: CompanySettingsProps) {
     setLogoPreview(logoValue || "");
   }, [logoValue]);
 
-  const handleFormSubmit = (data: CompanyFormData) => {
+  const handleFormSubmit = async (data: CompanyFormData) => {
     // Restructure the data to match the Company interface
 
     const companyData: Company = {
@@ -93,19 +94,23 @@ export function CompanySettings({ company, onSave }: CompanySettingsProps) {
       email: data.email,
     };
 
+    setIsSubmitting(true);
     try {
-      onSave(companyData);
+      await onSave(companyData);
 
-      toast.success("Company saved successfully");
+      toast.success("Company information saved successfully");
       reset(); // Reset form after saving
     } catch (error) {
-      console.error("Error saving company data: ", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to save company information. Please try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (company) {
-    debugger;
-  }
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -346,9 +351,17 @@ export function CompanySettings({ company, onSave }: CompanySettingsProps) {
           )}
         </Card>
 
-        <Button type="submit" className="flex items-center">
-          <Save className="h-4 w-4 mr-2" />
-          Save Company Information
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="flex items-center gap-2"
+        >
+          {isSubmitting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          {isSubmitting ? "Saving..." : "Save Company Information"}
         </Button>
       </form>
     </div>

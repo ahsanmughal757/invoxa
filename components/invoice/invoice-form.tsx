@@ -321,8 +321,11 @@ export function InvoiceForm({
       ? data.temporary_client
       : undefined;
 
-    await onSave(fullInvoiceData as InvoiceStructure, temporaryClient);
-    setIsSubmitting(false);
+    try {
+      await onSave(fullInvoiceData as InvoiceStructure, temporaryClient);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   return (
     <form onSubmit={handleSubmit(processSubmit)} className="space-y-6">

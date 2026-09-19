@@ -4,6 +4,7 @@ import { Inter, Lexend } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { QueryProvider } from "@/providers/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"], weight: ["300", "500", "700"] });
 const lexend = Lexend({ subsets: ["latin"], weight: ["300", "500", "700"] });
@@ -28,6 +29,7 @@ export default function RootLayout({
           <TooltipProvider>
             <QueryProvider>{children}</QueryProvider>
           </TooltipProvider>
+          <Toaster position="top-center" reverseOrder={false} />
         </body>
       </html>
     </ClerkProvider>

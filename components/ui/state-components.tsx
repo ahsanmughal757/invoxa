@@ -1,17 +1,36 @@
-import { Loader2, AlertCircle, PackageOpen, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, PackageOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface LoadingStateProps {
   message?: string;
   size?: "default" | "large";
+  blocks?: number;
 }
 
-export function LoadingState({ message = "Loading...", size = "default" }: LoadingStateProps) {
+export function LoadingState({
+  message = "Loading...",
+  size = "default",
+  blocks = 3,
+}: LoadingStateProps) {
   return (
-    <div className={`flex flex-col items-center justify-center ${size === "large" ? "min-h-[60vh]" : "py-12"}`}>
-      <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-4" />
-      <p className="text-gray-600">{message}</p>
+    <div
+      className={`flex flex-col items-center justify-center ${
+        size === "large" ? "min-h-[60vh]" : "py-10"
+      }`}
+    >
+      <div className="w-full max-w-3xl space-y-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Skeleton className="h-4 w-4 rounded-full" />
+          {message}
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {Array.from({ length: blocks }).map((_, i) => (
+            <Skeleton key={i} className="h-28 rounded-lg" />
+          ))}
+        </div>
+        <Skeleton className="h-72 rounded-lg" />
+      </div>
     </div>
   );
 }
@@ -30,17 +49,25 @@ interface EmptyStateProps {
   };
 }
 
-export function EmptyState({ title, description, icon, action, secondaryAction }: EmptyStateProps) {
+export function EmptyState({
+  title,
+  description,
+  icon,
+  action,
+  secondaryAction,
+}: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-12">
-      <div className="bg-gray-100 p-4 rounded-full mb-4">
-        {icon || <PackageOpen className="h-12 w-12 text-gray-400" />}
+    <div className="flex flex-col items-center justify-center py-16">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+        {icon || <PackageOpen className="h-8 w-8 text-muted-foreground" />}
       </div>
-      <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-600 text-center max-w-md mb-6">{description}</p>
-      {action && (
+      <h3 className="mb-2 text-lg font-semibold text-foreground">{title}</h3>
+      <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
+        {description}
+      </p>
+      {(action || secondaryAction) && (
         <div className="flex gap-2">
-          <Button onClick={action.onClick}>{action.text}</Button>
+          {action && <Button onClick={action.onClick}>{action.text}</Button>}
           {secondaryAction && (
             <Button variant="outline" onClick={secondaryAction.onClick}>
               {secondaryAction.text}
@@ -59,18 +86,46 @@ interface ErrorStateProps {
   icon?: React.ReactNode;
 }
 
-export function ErrorState({ title, description, onRetry, icon }: ErrorStateProps) {
+export function ErrorState({
+  title,
+  description,
+  onRetry,
+  icon,
+}: ErrorStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-12">
-      <div className="bg-red-100 p-4 rounded-full mb-4">
-        {icon || <AlertCircle className="h-12 w-12 text-red-500" />}
+    <div className="flex flex-col items-center justify-center py-16">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10">
+        {icon || <AlertCircle className="h-8 w-8 text-destructive" />}
       </div>
-      <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-600 text-center max-w-md mb-6">{description}</p>
+      <h3 className="mb-2 text-lg font-semibold text-foreground">{title}</h3>
+      <p className="mb-6 max-w-md text-center text-sm text-muted-foreground">
+        {description}
+      </p>
       {onRetry && (
         <Button variant="outline" onClick={onRetry}>
           Try Again
         </Button>
+      )}
+    </div>
+  );
+}
+
+interface SuccessStateProps {
+  title: string;
+  description?: string;
+}
+
+export function SuccessState({ title, description }: SuccessStateProps) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-success/10">
+        <CheckCircle2 className="h-8 w-8 text-success" />
+      </div>
+      <h3 className="mb-2 text-lg font-semibold text-foreground">{title}</h3>
+      {description && (
+        <p className="max-w-md text-center text-sm text-muted-foreground">
+          {description}
+        </p>
       )}
     </div>
   );

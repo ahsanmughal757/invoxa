@@ -89,7 +89,12 @@ export default function CreateInvoicePage() {
         router.push("/invoices");
       }
     } catch (error) {
-      console.error("Failed to save invoice:", error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to save invoice. Please try again.";
+      toast.error(message);
+      throw error;
     }
   };
 

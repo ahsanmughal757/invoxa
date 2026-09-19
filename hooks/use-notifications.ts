@@ -54,5 +54,5 @@ export const useNotifications = (userId: string | undefined) => {
     };
   }, [userId, supabase]);
 
-  return { notifications };
+  return { notifications, setNotifications };
 };
