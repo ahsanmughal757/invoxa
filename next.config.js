@@ -8,7 +8,9 @@ const nextConfig = {
   crossOrigin: "anonymous",
   allowedDevOrigins: [
     'droopingly-corked-royce.ngrok-free.dev', '*.clerk.com'
-  ]
+  ],
+  devIndicators: false
 };
+
 
 module.exports = nextConfig;

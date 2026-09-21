@@ -25,15 +25,16 @@
 // TOKEN is not required for server-side operations with supabasesecret key, but can be included if needed for authentication context.
 // SO RLS will work. 
 
+"use server";
 import { createClient } from "@supabase/supabase-js";
 
 export async function createAdminClient() {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-// const supabaseServiceRoleKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+// const supabaseServiceRoleKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY
 
   return createClient(
     supabaseUrl!,
-    supabaseServiceRoleKey!
+    supabaseSecretKey!
   );
 }

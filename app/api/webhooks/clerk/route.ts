@@ -10,6 +10,7 @@ import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { Logger } from "@/lib/utils/logger";
 import { NextResponse } from "next/server";
+import { ensureProfile } from "@/lib/services/ensure-profile.service";
 
 function getPrimaryEmail(emailAddresses: any[]): string | undefined {
   if (!emailAddresses?.length) return undefined;
@@ -107,23 +108,25 @@ export async function POST(request: Request) {
         // CLERK USER SYNC WITH DB --- END ------------------------------
 
         // CASE: IF USER DOES NOT EXISTS IN DATABASE __ START ------------------------------
-        const userData = await createUser({
+        const ensure = await ensureProfile({
+          clerkUserId: data.id,
           name,
           email,
-          clerk_user_id: data.id,
         });
 
-        if (!userData) {
+        if (ensure.kind !== "ok" || !ensure.profile) {
           Logger.error(
             "CLERK_WEBHOOK",
-            "Error creating the user using clerk webhook for new user",
-            null,
+            `Error ensuring profile: kind=${ensure.kind} clerk=${data.id}`,
+            (ensure as any).error,
           );
           return NextResponse.json(
             { message: "Failed to create the new user " },
             { status: 500 },
           );
         }
+
+        const userData = ensure.profile;
 
         Logger.info(
           "CLERK_WEBHOOK",

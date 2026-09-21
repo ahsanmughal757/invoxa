@@ -55,7 +55,8 @@ export async function useSupabaseClient() {
 
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    // process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       accessToken: () => session?.getToken() ?? Promise.resolve(null),
     },

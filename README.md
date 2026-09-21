@@ -10,6 +10,46 @@ Developed by **Your Company Name** - Professional Software Solutions
 
 InvoicePro™ is a comprehensive invoice management system designed to streamline your billing process and help you get paid faster. Built with modern technology for businesses of all sizes.
 
+## 🧪 Local Development: Clerk Webhooks with ngrok
+
+Clerk's webhooks (`user.created`, `user.updated`, `user.deleted`) hit our route at [`app/api/webhooks/clerk/route.ts`](app/api/webhooks/clerk/route.ts), which creates/updates profiles in Supabase. Clerk is a **cloud service** and cannot reach `localhost`, so for local testing you expose the route through **ngrok**.
+
+### 1. Start the app
+```bash
+npm run dev
+```
+(Next.js on `http://localhost:3000`)
+
+### 2. Expose port 3000 with ngrok
+```bash
+ngrok http 3000
+```
+ngrok prints a forwarding URL, e.g. `https://abcd-123-456.ngrok.app`. Keep this terminal running — the URL changes whenever ngrok restarts.
+
+### 3. Point Clerk at your endpoint
+1. Open the **Clerk Dashboard → Webhooks** for your app.
+2. Click **Add Endpoint** and set the URL to your ngrok URL plus the webhook path:
+   ```
+   https://abcd-123-456.ngrok.app/api/webhooks/clerk
+   ```
+3. Subscribe to the events the sync depends on:
+   - `user.created` (creates the `profiles` row + trial)
+   - `user.updated` (syncs name/email to the existing profile)
+   - `user.deleted` (removes the DB profile)
+4. Copy the generated **Signing Secret** (`whsec_...`) and set it in your local `.env`:
+   ```
+   CLERK_WEBHOOK_SECRET=whsec_...
+   ```
+   Restart `npm run dev` so the env var is picked up.
+
+### 4. Verify the handshake
+1. In the Clerk Dashboard → Webhooks, click **Send Test** on your endpoint — Clerk POSTs a sample `user.created` to your ngrok URL.
+2. Open **http://127.0.0.1:4040** — ngrok's local inspector shows the incoming request, the `svix-signature` header, and the JSON `200` response.
+3. Confirm the server log shows the idempotent `ensureProfile` upsert ran (e.g. a `CLERK_WEBHOOK` info line).
+
+> **Heads-up:** every `ngrok http 3000` restart issues a new subdomain, so update the endpoint URL in the Clerk Dashboard afterwardable. If you get `400` "Webhook verification failed", the `CLERK_WEBHOOK_SECRET` doesn't match the dashboard's Signing Secret — re-copy it.
+
+
 ## ✨ Key Features
 
 ### 📄 Invoice Management
