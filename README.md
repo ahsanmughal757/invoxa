@@ -1,198 +1,151 @@
-# InvoicePro™ Enterprise Edition
+# Invoxa
 
-**Professional Invoice Management System**
+**Billing software for small teams that outgrew spreadsheets.**
 
-Developed by **Your Company Name** - Professional Software Solutions
+Invoxa is a full-featured invoicing and cash-flow platform built around the idea that a freelancer, an agency, or a three-person consultancy shouldn't need an accountant to know who owes them money. You manage invoices, clients, payments and expenses in one place — and if you work with other people, you bring them in instead of exporting CSVs back and forth.
 
----
+This is the real product codebase: App Router, Postgres, row-level security, and a data layer that was designed with operations in mind, not just demos.
 
-## 🚀 Overview
-
-InvoicePro™ is a comprehensive invoice management system designed to streamline your billing process and help you get paid faster. Built with modern technology for businesses of all sizes.
-
-## 🧪 Local Development: Clerk Webhooks with ngrok
-
-Clerk's webhooks (`user.created`, `user.updated`, `user.deleted`) hit our route at [`app/api/webhooks/clerk/route.ts`](app/api/webhooks/clerk/route.ts), which creates/updates profiles in Supabase. Clerk is a **cloud service** and cannot reach `localhost`, so for local testing you expose the route through **ngrok**.
-
-### 1. Start the app
-```bash
-npm run dev
-```
-(Next.js on `http://localhost:3000`)
-
-### 2. Expose port 3000 with ngrok
-```bash
-ngrok http 3000
-```
-ngrok prints a forwarding URL, e.g. `https://abcd-123-456.ngrok.app`. Keep this terminal running — the URL changes whenever ngrok restarts.
-
-### 3. Point Clerk at your endpoint
-1. Open the **Clerk Dashboard → Webhooks** for your app.
-2. Click **Add Endpoint** and set the URL to your ngrok URL plus the webhook path:
-   ```
-   https://abcd-123-456.ngrok.app/api/webhooks/clerk
-   ```
-3. Subscribe to the events the sync depends on:
-   - `user.created` (creates the `profiles` row + trial)
-   - `user.updated` (syncs name/email to the existing profile)
-   - `user.deleted` (removes the DB profile)
-4. Copy the generated **Signing Secret** (`whsec_...`) and set it in your local `.env`:
-   ```
-   CLERK_WEBHOOK_SECRET=whsec_...
-   ```
-   Restart `npm run dev` so the env var is picked up.
-
-### 4. Verify the handshake
-1. In the Clerk Dashboard → Webhooks, click **Send Test** on your endpoint — Clerk POSTs a sample `user.created` to your ngrok URL.
-2. Open **http://127.0.0.1:4040** — ngrok's local inspector shows the incoming request, the `svix-signature` header, and the JSON `200` response.
-3. Confirm the server log shows the idempotent `ensureProfile` upsert ran (e.g. a `CLERK_WEBHOOK` info line).
-
-> **Heads-up:** every `ngrok http 3000` restart issues a new subdomain, so update the endpoint URL in the Clerk Dashboard afterwardable. If you get `400` "Webhook verification failed", the `CLERK_WEBHOOK_SECRET` doesn't match the dashboard's Signing Secret — re-copy it.
-
-
-## ✨ Key Features
-
-### 📄 Invoice Management
-- **Create & Edit Invoices** - Intuitive form with real-time calculations
-- **Multiple Templates** - Customizable invoice templates with branding
-- **Status Tracking** - Draft, Sent, Paid, Overdue status management
-- **Multi-Currency Support** - USD, EUR, GBP, CAD and more
-
-### 👥 Client Management
-- **Client Database** - Comprehensive client information storage
-- **Payment Terms** - Customizable payment terms per client
-- **Client Analytics** - Track client payment history and outstanding balances
-
-### 💰 Payment & Expense Tracking
-- **Payment Recording** - Multiple payment methods support
-- **Expense Management** - Categorized expense tracking
-- **Tax Management** - Tax deductible expense tracking
-
-### 📊 Reports & Analytics
-- **Financial Reports** - Revenue, expenses, and profit analysis
-- **Visual Charts** - Interactive charts and graphs
-- **Export Functionality** - Export reports in multiple formats
-
-### 🎨 Template Customization
-- **Custom Templates** - Create personalized invoice templates
-- **Brand Customization** - Colors, fonts, and layout options
-- **Field Management** - Show/hide invoice fields as needed
-
-### 🖨️ Print & Export
-- **Print Optimization** - Professional print layouts
-- **PDF Export** - Generate PDF invoices (ready for integration)
-- **Email Integration** - Send invoices directly (ready for email service)
-
-## 🛠️ Technical Stack
-
-- **Frontend**: Next.js 13 with App Router
-- **Styling**: Tailwind CSS
-- **UI Components**: Radix UI
-- **Language**: TypeScript
-- **State Management**: Custom React hooks
-- **Data Storage**: Local Storage (ready for database integration)
-
-## 📋 System Requirements
-
-- Node.js 18.0 or higher
-- Modern web browser (Chrome, Firefox, Safari, Edge)
-- Minimum 4GB RAM
-- 100MB available disk space
-
-## 🚀 Installation & Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone [repository-url]
-   cd invoicepro
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Start development server**
-   ```bash
-   npm run dev
-   ```
-
-4. **Build for production**
-   ```bash
-   npm run build
-   npm start
-   ```
-
-## 📖 User Guide
-
-### Getting Started
-1. **Company Setup** - Configure your company information in Settings
-2. **Add Clients** - Create client profiles with contact information
-3. **Create Templates** - Design custom invoice templates
-4. **Generate Invoices** - Create and send professional invoices
-
-### Best Practices
-- Set up company information before creating invoices
-- Use consistent template designs for brand recognition
-- Track payments regularly for better cash flow management
-- Export regular reports for financial analysis
-
-## 🔧 Configuration
-
-### Company Settings
-- Company name, address, and contact information
-- Logo upload and branding
-- Tax ID and business registration details
-
-### User Preferences
-- Default currency and payment terms
-- Date and number formats
-- Email signatures and notifications
-
-### Template Management
-- Create multiple template designs
-- Customize colors, fonts, and layouts
-- Set default templates for different client types
-
-## 📞 Support & Maintenance
-
-### Technical Support
-- **Email**: support@yourcompany.com
-- **Phone**: +1 (555) 123-4567
-- **Website**: www.yourcompany.com
-
-### Maintenance Schedule
-- Regular updates and security patches
-- Feature enhancements based on user feedback
-- 24/7 monitoring and support
-
-## 📄 License & Legal
-
-### Software License
-This software is licensed for use by the client organization under the terms of the Software License Agreement.
-
-### Intellectual Property
-- **InvoicePro™** is a trademark of Your Company Name
-- All rights reserved © 2024 Your Company Name
-- Unauthorized reproduction or distribution is prohibited
-
-### Compliance
-- GDPR compliant data handling
-- SOC 2 Type II security standards
-- Industry-standard encryption
-
-## 🔄 Version History
-
-### Version 1.0.0 - Enterprise Edition
-- Initial release with full feature set
-- Invoice creation and management
-- Client and payment tracking
-- Template customization
-- Reports and analytics
+![Invoxa dashboard](https://raw.githubusercontent.com/ahsanmughal757/invoxa/main/public/images/dashboard.png)
 
 ---
 
-**Developed by Your Company Name**  
-*Professional Software Solutions*
+## What it does
 
-For technical support or licensing inquiries, please contact our support team.
+- **Invoices** — create, edit, preview and export invoices with line items, tax, discounts and per-client currency. Seven lifecycle states (draft → sent → paid / overdue / partially paid / void / cancelled) and you can tag an invoice to one of five built-in templates — from a minimal monochrome look to a bold creative layout — or drop in a temporary client without setting up a full profile.
+- **Clients** — a real client database with payment terms, default currency, tax IDs and outstanding balances, so you always know what a given client owes across every invoice.
+- **Payments & ledger** — record payments against invoices (cash, check, bank transfer, card, PayPal, other), track partial payments, and review the full payments ledger.
+- **Expenses** — company and personal expenses with categories, vendors and tax-deductible flags. Money in and money out in the same tool.
+- **Reports & insights** — generated reports (Professional Invoice, Executive Summary, Detailed Analytics) plus an insights dashboard with the usual charts — revenue, expenses, profit/loss, client summaries — built on real aggregated data, not mock numbers.
+- **Organizations & collaboration** — invite teammates to your workspace, assign owner/member roles, switch between multiple organizations, and let members operate in a shared area without stepping on each other's data.
+- **Dashboard** — a financial command center showing outstanding receivables, revenue YTD, total invoiced vs collected, top debtors and aging analysis, all computed server-side in SQL.
+- **Notifications & activity** — a notification center driven by database triggers (overdue invoices, payments received, recurring invoices) plus a full activity log.
+- **Subscriptions & trials** — self-service trial flow (3-minute and 14-day), plan-gated features with an upgrade modal and trial banners, and admin controls to manage licenses and subscriptions for a handful of users.
+- **Admin** — a superuser area to manage plans, subscriptions, licenses and general system settings without touching the database.
+
+## Tech stack
+
+| Layer      | Choice                                                       |
+| ---------- | ------------------------------------------------------------ |
+| Framework  | Next.js 15 (App Router) + React 18                           |
+| Language   | TypeScript (strict)                                          |
+| Auth       | Clerk (SSO, organization-scoped sessions)                    |
+| Database   | Supabase / Postgres — RLS policies, triggers, materialized dashboard views |
+| Data layer | TanStack Query on top of a service → repository split         |
+| UI         | Tailwind CSS + Radix UI primitives (shadcn-style components) |
+| Charts     | Recharts                                                     |
+| PDF        | html2pdf.js (client-side export of invoice/report templates) |
+| Testing    | Jest + React Testing Library                                 |
+
+## How the data layer is organized
+
+Nothing on the dashboard or list views is client-computed from raw rows. The flow is roughly:
+
+```
+UI → hooks/ (TanStack Query)
+   → lib/services/ (domain logic, idempotent upserts, validations)
+   → lib/repositories/ (SQL against Supabase)
+   → Postgres (RLS enforced, materialized views + functions do the heavy aggregation)
+```
+
+Auth runs through Clerk; a webhook route (`app/api/webhooks/clerk`) keeps the `profiles` table in sync with `user.created` / `user.updated` / `user.deleted`, and every org-scoped query is guarded by Row-Level Security. The `.func.ts` suffix on repositories/services marks files that are the "functional" flavor used by server routes, distinct from the equivalent client helpers.
+
+## Getting started
+
+Requirements: Node.js ≥ 18.18, a [Supabase](https://supabase.com) project, and a [Clerk](https://clerk.com) application.
+
+```bash
+git clone git@github.com:ahsanmughal757/invoxa.git
+cd invoxa
+npm install
+```
+
+1. **Set up the database.** Apply the migrations from `supabase/migrations/` to your Supabase project (they run in order and are idempotent), then push the schema with the local CLI if you prefer:
+
+   ```bash
+   supabase db push
+   ```
+
+2. **Configure environment variables.** Copy `.env.example` to `.env` and fill in:
+
+   ```bash
+   NEXT_PUBLIC_SUPABASE_URL=          # e.g. https://xxxx.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=
+   SUPABASE_SERVICE_ROLE_KEY=
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+   CLERK_SECRET_KEY=
+   CLERK_WEBHOOK_SECRET=              # needed for local webhook testing (see below)
+   ```
+
+3. **Run it.**
+
+   ```bash
+   npm run dev        # http://localhost:3000
+   ```
+
+### Local dev with Clerk webhooks
+
+Clerk is a cloud service, so its webhooks can't reach `localhost`. To test the profile-sync route locally:
+
+1. Run `npm run dev` and in a second terminal: `ngrok http 3000`
+2. In the Clerk Dashboard → Webhooks, add an endpoint pointing at your ngrok URL + `/api/webhooks/clerk` (e.g. `https://abcd-123.ngrok.app/api/webhooks/clerk`) and subscribe to `user.created`, `user.updated`, `user.deleted`.
+3. Copy the generated signing secret into `CLERK_WEBHOOK_SECRET` and restart the dev server.
+4. Hit **Send Test** in the dashboard and confirm a 200 in the ngrok inspector (`http://127.0.0.1:4040`).
+
+Note that ngrok issues a fresh subdomain on every restart, so the endpoint URL in Clerk will need updating afterwards.
+
+## Scripts
+
+| Command               | What it does                          |
+| --------------------- | ------------------------------------- |
+| `npm run dev`         | Start the dev server                  |
+| `npm run build`       | Production build                      |
+| `npm start`           | Serve the production build            |
+| `npm run lint`        | ESLint via Next's built-in linting    |
+| `npm test`            | Run Jest once                         |
+| `npm run test:watch`  | Jest in watch mode                    |
+| `npm run test:coverage` | Jest with coverage report           |
+
+## Project layout
+
+```
+app/                    App Router pages
+  (main)/               Authenticated app: dashboard, invoices, clients,
+                        payments, expenses, reports, insights, settings
+  (auth)/               Clerk sign-in / sign-up / invite screens
+  site/                 Public marketing site
+  api/webhooks/clerk/   Profile sync webhook
+components/
+  ui/                   Radix + Tailwind primitives (button, table, dialog, …)
+  invoice/              Invoice form, preview, list + 5 print templates
+  reports/              Report renderers + 3 templates
+  clients/, payments/,
+  expenses/, insights/,
+  settings/, admin/     Feature modules
+lib/
+  services/             Domain logic (func flavor for server paths)
+  repositories/         SQL access layer
+  supabase/             client / server / admin helpers
+  utils/                logger, error handler, activity logger
+supabase/migrations/    Versioned SQL migrations
+hooks/                  TanStack Query hooks per feature
+```
+
+## What's next (honest status)
+
+Some things are wired in and working; others are in progress, and the README won't pretend otherwise:
+
+- [x] Invoice PDF export (client-side, template-based)
+- [x] Recurring invoice definitions — scheduling logic landing next
+- [x] Multi-organization with roles + invites
+- [ ] Email delivery of invoices (rule engine is ready; SMTP/email-service integration is not)
+- [ ] Public API surface (service layer is already designed for it)
+- [ ] Payment gateway integration (payment *recording* exists; processing does not)
+
+## License
+
+Commercial license — see [LICENSE.md](LICENSE.md).
+
+---
+
+Built with a lot of coffee and a fair amount of patience. If something's broken, an issue beats a support ticket every time.
