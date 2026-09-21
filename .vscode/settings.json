@@ -2,15 +2,6 @@
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "chat.agent.enabled": true,
-  "chat.agent.maxRequests": 15,
-  "chat.mcp.discovery.enabled": {
-    "claude-desktop": true,
-    "windsurf": true,
-    "cursor-global": true,
-    "cursor-workspace": true
-  },
-  "chat.tools.autoApprove": false,
   "deno.enablePaths": [
     "supabase/functions"
   ],
@@ -29,7 +20,5 @@
     "fs",
     "http",
     "net"
-  ],
-  "github.copilot.chat.agent.autoFix": true,
-  "github.copilot.chat.agent.runTasks": true
+  ]
 }

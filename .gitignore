@@ -5,18 +5,6 @@
 /.pnp
 .pnp.js
 
-# ai related
-# /.crush
-# /.bolt
-# /.aider*
-# /.gemini
-# /.cursor
-# /.clinerules
-# /.qodo
-# /.github
-# /.zencoder*
-
-
 # testing
 /coverage
 
@@ -46,15 +34,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.aider*
-
-# clerk configuration (can include secrets)
-/.clerk/
-
-
-#Ignore cursor AI rules
-.cursor/rules/codacy.mdc
-
-
-#Ignore vscode AI rules
-.github/instructions/codacy.instructions.md
