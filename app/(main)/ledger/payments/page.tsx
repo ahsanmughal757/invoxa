@@ -76,7 +76,7 @@ export default function PaymentsLedgerPage() {
       <SubscriptionGuard feature={FEATURES.PAYMENT_TRACKING}>
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-            <div>
+            {/* <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center">
                 <CreditCard className="h-8 w-8 mr-3 text-green-600" />
                 Money-In Ledger
@@ -85,7 +85,7 @@ export default function PaymentsLedgerPage() {
                 Financial ledger view of all payments received (money coming
                 into {organization?.name || "your organization"})
               </p>
-            </div>
+            </div> */}
             <BackButton href="/payments">Back to Payments</BackButton>
           </div>
 
