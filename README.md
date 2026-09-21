@@ -6,7 +6,7 @@ Invoxa is a full-featured invoicing and cash-flow platform built around the idea
 
 This is the real product codebase: App Router, Postgres, row-level security, and a data layer that was designed with operations in mind, not just demos.
 
-![Invoxa dashboard](https://raw.githubusercontent.com/ahsanmughal757/invoxa/main/public/images/dashboard.png)
+<img width="1889" height="873" alt="Screenshot 2026-09-21 143813" src="https://github.com/user-attachments/assets/85251c80-210e-49ec-81e3-0c922bf5422f" />
 
 ---
 
@@ -131,7 +131,7 @@ supabase/migrations/    Versioned SQL migrations
 hooks/                  TanStack Query hooks per feature
 ```
 
-## What's next (honest status)
+## What's next
 
 Some things are wired in and working; others are in progress, and the README won't pretend otherwise:
 
